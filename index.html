@@ -1433,7 +1433,7 @@ function renderQuiz() {
       <button class="btn btn-reveal" onclick="reveal()">👁 정답 보기</button>
     </div>
   `;
-  window._ttsText = w.furigana || w.kanji;
+  _ttsText = w.furigana || w.kanji;
 }
 
 function reveal() {
@@ -1744,32 +1744,32 @@ function _speakViaWebSpeech(text, onOk, onFail) {
   if (!window.speechSynthesis) { onFail(); return; }
   speechSynthesis.cancel();
 
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang   = 'ja-JP';
-  utter.rate   = (optsSettings.ttsRate ?? 85) / 100;
-  utter.volume = (optsSettings.ttsVolume ?? 100) / 100;
-  utter.pitch  = 1;
+  // cancel() 직후 speak() 하면 Chrome에서 씹히는 버그 → 50ms 딜레이
+  setTimeout(() => {
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang   = 'ja-JP';
+    utter.rate   = (optsSettings.ttsRate ?? 85) / 100;
+    utter.volume = (optsSettings.ttsVolume ?? 100) / 100;
+    utter.pitch  = 1;
 
-  // 일본어 음성 우선, 없으면 기본 음성으로 시도
-  const jaVoice = _wsVoices.find(v => v.lang === 'ja-JP') || _wsVoices.find(v => v.lang.startsWith('ja'));
-  if (jaVoice) utter.voice = jaVoice;
+    const jaVoice = _wsVoices.find(v => v.lang === 'ja-JP') || _wsVoices.find(v => v.lang.startsWith('ja'));
+    if (jaVoice) utter.voice = jaVoice;
 
-  let started = false;
-  utter.onstart = () => { started = true; onOk(); };
-  utter.onend   = () => _ttsReset();
-  utter.onerror = (e) => {
-    if (e.error === 'interrupted') { _ttsReset(); return; }
-    onFail();
-  };
+    let started = false;
+    utter.onstart = () => { started = true; onOk(); };
+    utter.onend   = () => _ttsReset();
+    utter.onerror = (e) => {
+      if (e.error === 'interrupted') { _ttsReset(); return; }
+      onFail();
+    };
 
-  speechSynthesis.speak(utter);
-  // Chrome file:// : speak 후 paused로 굳는 버그 대응
-  setTimeout(() => { if (speechSynthesis.paused) speechSynthesis.resume(); }, 80);
-  // 1.5초 내 onstart 없으면 실패로 판단
-  setTimeout(() => { if (!started) { speechSynthesis.cancel(); onFail(); } }, 1500);
+    speechSynthesis.speak(utter);
+    setTimeout(() => { if (speechSynthesis.paused) speechSynthesis.resume(); }, 100);
+    setTimeout(() => { if (!started) { speechSynthesis.cancel(); onFail(); } }, 2000);
+  }, 50);
 }
 
-// ── 메인 함수: Google → WebSpeech → 실패 안내 순으로 시도 ──
+// ── 메인 함수: WebSpeech ──
 function speakWord(btn, text) {
   if (!text) return;
 
