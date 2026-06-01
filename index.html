@@ -163,14 +163,17 @@
     font-weight: 700;
     line-height: 1.2;
     color: var(--ink);
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
   .card .furigana {
     font-family: 'Noto Serif JP', serif;
-    font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+    font-size: clamp(1.2rem, 3.2vw, 1.6rem);
     font-weight: 700;
     color: var(--mint);
+    opacity: 0;
     transition: opacity 0.4s ease;
+    margin-bottom: 2px;
+    min-height: 1.4em;
   }
   .card .furigana.show { opacity: 1; }
   .card .meaning {
@@ -178,7 +181,8 @@
     color: #444;
     opacity: 0;
     transition: opacity 0.4s ease 0.1s;
-    padding: 8px 16px;
+    padding: 16px 16px 8px;
+    margin-top: 10px;
     border-top: 1px dashed var(--border);
     width: 100%;
     display: flex;
@@ -1131,11 +1135,20 @@
     letter-spacing: 0.02em;
     vertical-align: middle;
     flex-shrink: 0;
+    transition: background 0.15s;
   }
   .btn-kb-badge::before {
     content: attr(data-key);
     color: white;
+    transition: color 0.15s;
   }
+  /* hover 시 버튼 글자가 white가 되면 뱃지 배경도 버튼 배경색으로 바꿔서 글자가 보이게 */
+  .btn-reveal:hover .btn-kb-badge { background: var(--mint-soft); }
+  .btn-reveal:hover .btn-kb-badge::before { color: var(--mint); }
+  .btn-carry:hover .btn-kb-badge  { background: var(--red-soft); }
+  .btn-carry:hover .btn-kb-badge::before  { color: var(--red); }
+  .btn-done:hover .btn-kb-badge   { background: var(--mint-soft); }
+  .btn-done:hover .btn-kb-badge::before   { color: var(--mint); }
 </style>
 </head>
 <body>
@@ -1204,11 +1217,11 @@
             <div class="vol-row">
               <span style="font-size:0.9rem">🔈</span>
               <input type="range" class="vol-slider" id="opt-tts-volume"
-                min="0" max="100" value="100"
+                min="0" max="100" step="5" value="100"
                 oninput="updateVolDisplay(this.value)" onchange="saveOptsSettings()">
               <span class="vol-val" id="vol-display">100%</span>
               <span style="font-size:0.9rem">🔊</span>
-              <button class="reset-val-btn" onclick="resetVolume()" title="50%로 초기화">↺</button>
+              <button class="reset-val-btn" onclick="resetVolume()" title="100%로 초기화">↺</button>
             </div>
           </div>
         </div>
@@ -1220,7 +1233,7 @@
             <div class="vol-row">
               <span style="font-size:0.8rem;color:#999">느림</span>
               <input type="range" class="vol-slider" id="opt-tts-rate"
-                min="50" max="150" value="85"
+                min="50" max="150" step="10" value="85"
                 oninput="updateRateDisplay(this.value)" onchange="saveOptsSettings()">
               <span class="vol-val" id="rate-display">0.85×</span>
               <span style="font-size:0.8rem;color:#999">빠름</span>
@@ -1398,6 +1411,8 @@
       <option value="">전체 품사</option>
       <option value="명사">명사</option>
       <option value="동사">동사</option>
+      <option value="자동사">자동사</option>
+      <option value="타동사">타동사</option>
       <option value="형용사">형용사</option>
       <option value="나형용사">나형용사</option>
       <option value="부사">부사</option>
@@ -1891,18 +1906,14 @@ function renderQuiz() {
       <div class="card" id="quiz-card" onclick="onCardClick()" style="cursor:pointer">
         ${typeBadge}
         ${carryIndicator}
-        <div class="kanji">${w.kanji}</div>
         <div class="furigana" id="furi">${w.furigana}</div>
+        <div class="kanji">${w.kanji}</div>
         <div class="meaning" id="mean">${w.type ? `<span class="meaning-type-badge">${esc(w.type)}</span>` : ''}<span>${esc(w.meaning)}</span></div>
         ${(optsSettings.showExample && w.exampleJp) ? `
         <div class="example-block" id="example-block">
           <div class="example-label">예문</div>
           <div class="example-jp">${esc(w.exampleJp)}</div>
           ${w.exampleKr ? `<div class="example-kr" id="example-kr">${esc(w.exampleKr)}</div>` : ''}
-        </div>` : ''}
-        ${(!optsSettings.ttsAutoplay && !optsSettings.ttsAutoReveal) ? `
-        <div class="card-tts-wrap">
-          <button class="btn-tts" id="tts-btn-card" onclick="speakCurrentWord(this)" title="발음 듣기">🔊</button>
         </div>` : ''}
       </div>
     </div>
@@ -2184,7 +2195,7 @@ function editRow(id) {
     <td><input id="e-mean-${id}" value="${esc(w.meaning)}" placeholder="뜻" /></td>
     <td>
       <select id="e-type-${id}">
-        ${['명사','동사','형용사','나형용사','부사','조사','접속사','기타'].map(t =>
+        ${['명사','동사','자동사','타동사','형용사','나형용사','부사','조사','접속사','기타'].map(t =>
           `<option${w.type===t?' selected':''}>${t}</option>`
         ).join('')}
       </select>
@@ -2755,8 +2766,8 @@ const OPTS_KEY = 'jp_vocab_opts_v1';
 let optsSettings = {
   ttsAutoplay:   false,   // 카드 클릭 시 자동 발음
   ttsAutoReveal: false,   // 정답 공개 시 자동 발음
-  ttsVolume:     100,     // 0~100
-  ttsRate:       85,      // 50~150 (실제값 /100)
+  ttsVolume:     100,     // 0~100, step 5
+  ttsRate:       90,      // 50~150, step 10 (실제값 /100)
   showExample:   true,    // 퀴즈에서 예문 표시
 };
 
@@ -2795,11 +2806,11 @@ function updateVolDisplay(val) {
   document.getElementById('vol-display').textContent = val + '%';
 }
 function updateRateDisplay(val) {
-  document.getElementById('rate-display').textContent = (val / 100).toFixed(2) + '×';
+  document.getElementById('rate-display').textContent = (val / 100).toFixed(1) + '×';
 }
 function resetVolume() {
-  document.getElementById('opt-tts-volume').value = 50;
-  updateVolDisplay(50);
+  document.getElementById('opt-tts-volume').value = 100;
+  updateVolDisplay(100);
   saveOptsSettings();
 }
 function resetRate() {
