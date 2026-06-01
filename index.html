@@ -1056,11 +1056,14 @@
     margin-top: 10px;
     padding: 10px 14px;
     border-top: 1px dashed var(--border);
-    text-align: left;
+    text-align: center;
     display: flex;
     flex-direction: column;
     gap: 4px;
+    border-radius: 0 0 10px 10px;
+    transition: background 0.15s;
   }
+  .card .example-block:hover { background: var(--mint-pale); }
   .example-label {
     font-size: 0.68rem;
     font-weight: 700;
@@ -1910,8 +1913,8 @@ function renderQuiz() {
         <div class="kanji">${w.kanji}</div>
         <div class="meaning" id="mean">${w.type ? `<span class="meaning-type-badge">${esc(w.type)}</span>` : ''}<span>${esc(w.meaning)}</span></div>
         ${(optsSettings.showExample && w.exampleJp) ? `
-        <div class="example-block" id="example-block">
-          <div class="example-label">예문</div>
+        <div class="example-block" id="example-block" data-exjp="${esc(w.exampleJp)}" onclick="event.stopPropagation(); speakExampleBlock(this)" style="cursor:pointer" title="예문 발음 듣기">
+          <div class="example-label">예문 🔊</div>
           <div class="example-jp">${esc(w.exampleJp)}</div>
           ${w.exampleKr ? `<div class="example-kr" id="example-kr">${esc(w.exampleKr)}</div>` : ''}
         </div>` : ''}
@@ -1922,6 +1925,7 @@ function renderQuiz() {
     </div>
   `;
   _ttsText = w.furigana || w.kanji;
+  _ttsExampleText = (optsSettings.showExample && w.exampleJp) ? w.exampleJp : '';
 }
 
 function reveal() {
@@ -1940,8 +1944,12 @@ function reveal() {
 
   // 정답 공개 시 자동 발음
   if (optsSettings.ttsAutoReveal) {
-    const btn = document.getElementById('tts-btn-card') || document.createElement('button');
-    speakCurrentWord(btn);
+    if (optsSettings.showExample && _ttsExampleText) {
+      speakWordThenExample();
+    } else {
+      const btn = document.createElement('button');
+      speakCurrentWord(btn);
+    }
   }
 }
 
@@ -2293,9 +2301,11 @@ async function deleteRow(id) {
 
 // ── TTS (Text-to-Speech) ──
 let _ttsText = '';
+let _ttsExampleText = '';
 let _ttsAudio = null;        // Audio 객체 (Google TTS 경로)
 let _ttsSpeaking = false;
 let _ttsActiveBtn = null;
+let _ttsChainTimer = null;   // 단어→예문 연속 재생 타이머
 
 // 현재 재생 중인 버튼 상태 초기화
 function _ttsReset() {
@@ -2308,6 +2318,7 @@ function _ttsReset() {
 
 // 재생 중지
 function _ttsStop() {
+  if (_ttsChainTimer) { clearTimeout(_ttsChainTimer); _ttsChainTimer = null; }
   if (_ttsAudio) { _ttsAudio.pause(); _ttsAudio = null; }
   if (window.speechSynthesis) speechSynthesis.cancel();
   _ttsReset();
@@ -2391,6 +2402,62 @@ function speakWord(btn, text) {
 
 function speakCurrentWord(btn) {
   speakWord(btn, _ttsText || '');
+}
+
+function speakExampleBlock(el) {
+  const text = el.dataset.exjp;
+  if (text) speakWord(el, text);
+}
+
+// 단어 재생 후 잠깐 쉬고 예문 재생
+function speakWordThenExample() {
+  if (!_ttsText) return;
+  _ttsStop();
+
+  const dummyBtn = document.createElement('button');
+
+  // Google TTS: audio.onended 콜백으로 체이닝
+  const url = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=ja&client=tw-ob&q=' + encodeURIComponent(_ttsText);
+  const audio = new Audio(url);
+  audio.volume = (optsSettings.ttsVolume ?? 100) / 100;
+  audio.playbackRate = (optsSettings.ttsRate ?? 90) / 100;
+  let googleDone = false;
+
+  const afterWord = () => {
+    // 0.8초 쉬고 예문 재생
+    if (_ttsExampleText) {
+      _ttsChainTimer = setTimeout(() => {
+        _ttsChainTimer = null;
+        speakWord(document.createElement('button'), _ttsExampleText);
+      }, 800);
+    }
+  };
+
+  const fallback = () => {
+    // Web Speech로 단어 → 끝나면 예문
+    if (!window.speechSynthesis) return;
+    speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(_ttsText);
+    utter.lang = 'ja-JP';
+    utter.rate = (optsSettings.ttsRate ?? 90) / 100;
+    utter.volume = (optsSettings.ttsVolume ?? 100) / 100;
+    const jaVoice = _wsVoices.find(v => v.lang === 'ja-JP') || _wsVoices.find(v => v.lang.startsWith('ja'));
+    if (jaVoice) utter.voice = jaVoice;
+    utter.onend = afterWord;
+    utter.onerror = (e) => { if (e.error !== 'interrupted') afterWord(); };
+    speechSynthesis.speak(utter);
+  };
+
+  const fail = () => { if (!googleDone) { googleDone = true; audio.src = ''; fallback(); } };
+  audio.oncanplaythrough = () => {
+    if (googleDone) return;
+    googleDone = true;
+    _ttsAudio = audio;
+    audio.play().catch(fail);
+  };
+  audio.onerror = audio.onabort = fail;
+  audio.onended = () => { _ttsReset(); afterWord(); };
+  setTimeout(fail, 2000);
 }
 
 // ── Backup System ──
