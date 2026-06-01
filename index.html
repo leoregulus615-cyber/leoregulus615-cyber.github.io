@@ -8,19 +8,19 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --ink: #1a1a1a;
-    --paper: #f5f0e8;
-    --paper2: #ede7d9;
+    --ink: #1a2e2b;
+    --paper: #f0f6f3;
+    --paper2: #e0ece7;
     --red: #c0392b;
-    --red-soft: #e8c5c1;
-    --green: #2c7a4b;
-    --green-soft: #c1dfd0;
-    --gold: #b8860b;
-    --gold-soft: #f0e0a0;
-    --blue: #2c4f7a;
-    --blue-soft: #c1cfe8;
-    --border: #c8bfaa;
-    --shadow: rgba(0,0,0,0.12);
+    --red-soft: #f5e0de;
+    --green: #2d7a50;
+    --green-soft: #c3e5d4;
+    --mint: #3a7d5f;
+    --mint-soft: #c8e6d8;
+    --mint-deep: #163328;
+    --mint-pale: #e8f5ee;
+    --border: #aecfbe;
+    --shadow: rgba(58,125,95,0.10);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,9 +36,9 @@
 
   /* ── Header ── */
   header {
-    background: var(--ink);
+    background: var(--mint-deep);
     color: var(--paper);
-    padding: 14px 24px;
+    padding: 10px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -46,40 +46,59 @@
     top: 0;
     z-index: 100;
     box-shadow: 0 2px 12px var(--shadow);
+    gap: 8px;
+    min-width: 0;
   }
   header h1 {
     font-family: 'Noto Serif JP', serif;
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     font-weight: 700;
     letter-spacing: 0.05em;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   header h1 span {
-    font-size: 0.7rem;
+    font-size: 0.62rem;
     font-family: 'Noto Sans KR', sans-serif;
     opacity: 0.6;
     display: block;
     letter-spacing: 0.1em;
   }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
 
   .tab-bar {
     display: flex;
-    gap: 4px;
+    gap: 0;
+    background: rgba(0,0,0,0.25);
+    border-radius: 6px;
+    padding: 3px;
   }
   .tab-btn {
     background: transparent;
-    border: 1px solid rgba(255,255,255,0.3);
-    color: rgba(255,255,255,0.7);
-    padding: 6px 16px;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    padding: 0 14px;
+    height: 30px;
     border-radius: 4px;
     cursor: pointer;
     font-family: 'Noto Sans KR', sans-serif;
     font-size: 0.82rem;
-    transition: all 0.2s;
+    font-weight: 600;
+    transition: all 0.18s;
+    white-space: nowrap;
   }
-  .tab-btn.active, .tab-btn:hover {
-    background: var(--paper);
+  .tab-btn.active {
+    background: white;
     color: var(--ink);
-    border-color: var(--paper);
+  }
+  .tab-btn:not(.active):hover {
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.9);
   }
 
   /* ── Pages ── */
@@ -89,21 +108,28 @@
   /* ── Quiz Mode ── */
   .quiz-stats {
     display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .quiz-stats-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: nowrap;
   }
   .stat-chip {
-    padding: 5px 14px;
+    padding: 5px 12px;
     border-radius: 20px;
     font-size: 0.78rem;
     font-weight: 600;
     border: 1px solid var(--border);
     background: white;
+    white-space: nowrap;
   }
-  .stat-chip.carry { background: var(--gold-soft); border-color: var(--gold); color: var(--gold); }
+  .stat-chip.carry { background: var(--red-soft); border-color: var(--red); color: var(--red); }
   .stat-chip.done { background: var(--green-soft); border-color: var(--green); color: var(--green); }
-  .stat-chip.remain { background: var(--blue-soft); border-color: var(--blue); color: var(--blue); }
+  .stat-chip.remain { background: var(--mint-pale); border-color: var(--mint); color: var(--mint-deep); }
 
   .card-wrapper {
     perspective: 1000px;
@@ -129,7 +155,7 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 4px;
-    background: var(--ink);
+    background: var(--mint-deep);
   }
   .card .kanji {
     font-family: 'Noto Serif JP', serif;
@@ -141,10 +167,9 @@
   }
   .card .furigana {
     font-family: 'Noto Serif JP', serif;
-    font-size: clamp(1rem, 3vw, 1.4rem);
-    color: var(--red);
-    margin-bottom: 10px;
-    opacity: 0;
+    font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+    font-weight: 700;
+    color: var(--mint);
     transition: opacity 0.4s ease;
   }
   .card .furigana.show { opacity: 1; }
@@ -156,8 +181,23 @@
     padding: 8px 16px;
     border-top: 1px dashed var(--border);
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
   }
   .card .meaning.show { opacity: 1; }
+  .meaning-type-badge {
+    font-size: 0.72rem;
+    background: var(--paper2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 7px;
+    color: #777;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
   .card .type-badge {
     position: absolute;
     top: 14px;
@@ -198,14 +238,14 @@
     gap: 6px;
   }
   .btn:active { transform: translateY(1px); }
-  .btn-reveal { background: var(--gold-soft); border-color: var(--gold); color: var(--gold); }
-  .btn-reveal:hover { background: var(--gold); color: white; }
-  .btn-carry { background: var(--red-soft); border-color: var(--red); color: var(--red); }
+  .btn-reveal { background: var(--mint-soft); border-color: var(--mint); color: var(--mint); padding-top: 18px; padding-bottom: 18px; }
+  .btn-reveal:hover { background: var(--mint); color: white; }
+  .btn-carry { background: var(--red-soft); border-color: var(--red); color: var(--red); padding-top: 18px; padding-bottom: 18px; }
   .btn-carry:hover { background: var(--red); color: white; }
-  .btn-done { background: var(--green-soft); border-color: var(--green); color: var(--green); }
-  .btn-done:hover { background: var(--green); color: white; }
-  .btn-primary { background: var(--ink); border-color: var(--ink); color: var(--paper); }
-  .btn-primary:hover { background: #333; }
+  .btn-done { background: var(--green-soft); border-color: var(--green); color: var(--green); padding-top: 18px; padding-bottom: 18px; }
+  .btn-done:hover { background: var(--mint); color: white; }
+  .btn-primary { background: var(--mint-deep); border-color: var(--mint-deep); color: white; }
+  .btn-primary:hover { background: var(--mint); border-color: var(--mint); }
   .btn-danger { background: #fdecea; border-color: var(--red); color: var(--red); }
   .btn-danger:hover { background: var(--red); color: white; }
   .btn-carry-review {
@@ -213,23 +253,23 @@
     border-radius: 20px;
     font-size: 0.78rem;
     font-weight: 600;
-    border: 1.5px solid var(--red);
-    background: var(--red-soft);
-    color: var(--red);
+    border: 1.5px solid var(--mint);
+    background: var(--mint-soft);
+    color: var(--mint);
     cursor: pointer;
     font-family: 'Noto Sans KR', sans-serif;
     transition: all 0.2s;
   }
-  .btn-carry-review:hover { background: var(--red); color: white; }
+  .btn-carry-review:hover { background: var(--mint); color: white; }
   .btn-carry-review.active-mode {
-    background: var(--red);
+    background: var(--mint);
     color: white;
-    box-shadow: 0 0 0 3px var(--red-soft);
+    box-shadow: 0 0 0 3px var(--mint-soft);
   }
   #btn-carry-threshold.active-mode {
-    background: var(--gold) !important;
+    background: var(--mint-deep) !important;
     color: white !important;
-    box-shadow: 0 0 0 3px var(--gold-soft);
+    box-shadow: 0 0 0 3px var(--mint-soft);
   }
   .mode-banner {
     background: var(--red-soft);
@@ -278,7 +318,7 @@
   }
   .progress-bar-fill {
     height: 100%;
-    background: var(--green);
+    background: var(--mint);
     border-radius: 3px;
     transition: width 0.4s ease;
   }
@@ -297,6 +337,53 @@
     margin-left: auto;
   }
 
+  /* ── Dropdown Menu ── */
+  .dropdown-wrap {
+    position: relative;
+    display: inline-block;
+  }
+  .dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    z-index: 200;
+    min-width: 180px;
+    overflow: hidden;
+  }
+  .dropdown-menu.open { display: block; }
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    transition: background 0.12s;
+    border-bottom: 1px solid var(--paper2);
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .dropdown-item:last-child { border-bottom: none; }
+  .dropdown-item:hover { background: var(--paper2); }
+  .dropdown-item.danger { color: var(--red); }
+  .dropdown-item.danger:hover { background: var(--red-soft); }
+  .dropdown-item.success { color: var(--mint); }
+  .dropdown-item.success:hover { background: var(--mint-soft); }
+  .dropdown-item.gold { color: var(--mint); }
+  .dropdown-item.gold:hover { background: var(--mint-soft); }
+  .dropdown-divider { height: 0; border-top: 2px solid var(--paper2); margin: 4px 0; }
+
   .vocab-table-wrap {
     overflow-x: auto;
     border: 1.5px solid var(--border);
@@ -310,7 +397,7 @@
     min-width: 480px;
   }
   thead tr {
-    background: var(--ink);
+    background: var(--mint-deep);
     color: var(--paper);
   }
   thead th {
@@ -333,12 +420,46 @@
     vertical-align: middle;
   }
   td.kanji-cell { font-family: 'Noto Serif JP', serif; font-size: 1.1rem; font-weight: 700; }
-  td.furigana-cell { color: var(--red); font-family: 'Noto Serif JP', serif; }
+  td.furigana-cell { color: var(--mint); font-family: 'Noto Serif JP', serif; font-weight: 700; }
   td.type-cell { color: #777; font-size: 0.78rem; }
   td.actions-cell { white-space: nowrap; }
 
+  /* ── 카드형 레이아웃 (좁은 화면) ── */
+  .word-card-list { display: none; flex-direction: column; gap: 8px; }
+  .word-card {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 1px 1px 0 var(--border);
+    cursor: default;
+  }
+  .word-card.row-selected { background: #e8effa; border-color: #7a9fd4; }
+  .word-card-check { flex-shrink: 0; }
+  .word-card-body { flex: 1; min-width: 0; }
+  .word-card-kanji {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .word-card-furi { font-family: 'Noto Serif JP', serif; color: var(--mint); font-size: 0.85rem; font-weight: 700; }
+  .word-card-meaning { font-size: 0.85rem; color: #444; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .word-card-meta { display: flex; gap: 6px; margin-top: 4px; align-items: center; flex-wrap: wrap; }
+  .word-card-type { font-size: 0.7rem; color: #888; background: var(--paper2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; }
+  .word-card-carry { font-size: 0.7rem; color: var(--red); }
+  .word-card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+  @media (max-width: 560px) {
+    .vocab-table-wrap { display: none; }
+    .word-card-list { display: flex; }
+  }
+
   td input, td select {
-    border: 1px solid var(--gold);
+    border: 1px solid var(--mint);
     border-radius: 4px;
     padding: 4px 7px;
     font-family: inherit;
@@ -349,7 +470,7 @@
   }
   td input:focus, td select:focus {
     border-color: var(--ink);
-    box-shadow: 0 0 0 2px var(--gold-soft);
+    box-shadow: 0 0 0 2px var(--mint-soft);
   }
 
   .icon-btn {
@@ -362,7 +483,7 @@
     transition: all 0.15s;
     margin-right: 3px;
   }
-  .icon-btn.edit-btn:hover { background: var(--gold-soft); border-color: var(--gold); }
+  .icon-btn.edit-btn:hover { background: var(--mint-soft); border-color: var(--mint); }
   .icon-btn.save-btn { background: var(--green-soft); border-color: var(--green); color: var(--green); }
   .icon-btn.del-btn:hover { background: var(--red-soft); border-color: var(--red); color: var(--red); }
   .icon-btn.cancel-btn:hover { background: var(--paper2); }
@@ -394,7 +515,7 @@
     bottom: 28px;
     left: 50%;
     transform: translateX(-50%) translateY(20px);
-    background: var(--ink);
+    background: var(--mint-deep);
     color: var(--paper);
     padding: 10px 22px;
     border-radius: 20px;
@@ -410,30 +531,59 @@
     transform: translateX(-50%) translateY(0);
   }
 
+  .font-btn {
+    padding: 0 8px;
+    letter-spacing: 0.05em;
+    background: transparent !important;
+    border-color: transparent !important;
+  }
+  .font-btn:hover {
+    background: rgba(255,255,255,0.18) !important;
+    border-color: transparent !important;
+    color: white !important;
+  }
+
+  /* 창 좁아질수록 단계적으로 숨김 */
+  @media (max-width: 600px) {
+    .sync-status-text { display: none; }
+    .opts-label { display: none; }
+    .opts-icon  { display: inline !important; }
+    .tab-label  { display: none; }
+  }
   @media (max-width: 480px) {
-    header { padding: 12px 14px; }
-    header h1 { font-size: 1.1rem; }
-    .tab-btn { padding: 5px 10px; font-size: 0.75rem; }
+    header { padding: 10px 10px; }
+    header h1 { font-size: 1.0rem; }
+    .header-title span { display: none; }
+    .font-btn { padding: 0 6px; font-size: 0.73rem; }
     .page { padding: 16px 12px; }
     .btn { padding: 10px 16px; font-size: 0.82rem; }
+  }
+  @media (max-width: 380px) {
+    .header-title { display: none; }
   }
 
   /* ── Keyboard Settings ── */
   .kb-settings-btn {
-    background: transparent;
-    border: 1px solid rgba(255,255,255,0.3);
-    color: rgba(255,255,255,0.7);
-    padding: 6px 10px;
-    border-radius: 4px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: rgba(255,255,255,0.75);
+    padding: 0 12px;
+    height: 30px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.2s;
+    font-size: 0.82rem;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 600;
+    transition: all 0.18s;
     line-height: 1;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
   }
   .kb-settings-btn:hover {
-    background: var(--paper);
-    color: var(--ink);
-    border-color: var(--paper);
+    background: rgba(255,255,255,0.18);
+    color: white;
+    border-color: rgba(255,255,255,0.35);
   }
 
   .modal-overlay {
@@ -503,9 +653,9 @@
     width: 10px; height: 10px;
     border-radius: 50%;
   }
-  .kb-badge.reveal { background: var(--gold); }
+  .kb-badge.reveal { background: var(--mint); }
   .kb-badge.carry  { background: var(--red); }
-  .kb-badge.done   { background: var(--green); }
+  .kb-badge.done   { background: var(--mint); }
 
   .kb-capture-btn {
     padding: 7px 14px;
@@ -521,11 +671,11 @@
     color: var(--ink);
     font-weight: 600;
   }
-  .kb-capture-btn:hover { border-color: var(--gold); background: var(--gold-soft); }
+  .kb-capture-btn:hover { border-color: var(--mint); background: var(--mint-soft); }
   .kb-capture-btn.listening {
-    border-color: var(--blue);
-    background: var(--blue-soft);
-    color: var(--blue);
+    border-color: var(--mint-deep);
+    background: var(--mint-pale);
+    color: var(--mint-deep);
     animation: kb-pulse 0.9s infinite;
   }
   @keyframes kb-pulse {
@@ -571,7 +721,7 @@
     min-width: 28px;
     height: 24px;
     padding: 0 7px;
-    background: var(--ink);
+    background: var(--mint-deep);
     color: var(--paper);
     border-radius: 4px;
     font-size: 0.75rem;
@@ -669,7 +819,7 @@
     transition: transform 0.2s;
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
   }
-  .toggle-wrap input:checked + .toggle-track { background: var(--green); }
+  .toggle-wrap input:checked + .toggle-track { background: var(--mint); }
   .toggle-wrap input:checked + .toggle-track::after { transform: translateX(20px); }
 
   /* volume slider */
@@ -689,7 +839,7 @@
     -webkit-appearance: none;
     width: 18px; height: 18px;
     border-radius: 50%;
-    background: var(--ink);
+    background: var(--mint-deep);
     cursor: pointer;
     border: 2px solid white;
     box-shadow: 0 1px 4px rgba(0,0,0,0.25);
@@ -697,7 +847,7 @@
   .vol-slider::-moz-range-thumb {
     width: 18px; height: 18px;
     border-radius: 50%;
-    background: var(--ink);
+    background: var(--mint-deep);
     cursor: pointer;
     border: 2px solid white;
   }
@@ -708,6 +858,18 @@
     min-width: 36px;
     text-align: right;
   }
+  .reset-val-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 7px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    color: #888;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .reset-val-btn:hover { background: var(--paper2); color: var(--ink); border-color: #aaa; }
   .opts-section-title {
     font-size: 0.72rem;
     font-weight: 700;
@@ -765,7 +927,7 @@
     white-space: nowrap;
   }
   .backup-action-btn.dl  { border-color: var(--green); color: var(--green); }
-  .backup-action-btn.dl:hover  { background: var(--green); color: white; }
+  .backup-action-btn.dl:hover  { background: var(--mint); color: white; }
   .backup-action-btn.del { border-color: var(--red); color: var(--red); }
   .backup-action-btn.del:hover { background: var(--red); color: white; }
   .backup-empty {
@@ -832,7 +994,7 @@
   .ic-btn-replace { background: var(--red-soft); border-color: var(--red); color: var(--red); }
   .ic-btn-replace:hover { background: var(--red); color: white; }
   .ic-btn-add { background: var(--green-soft); border-color: var(--green); color: var(--green); }
-  .ic-btn-add:hover { background: var(--green); color: white; }
+  .ic-btn-add:hover { background: var(--mint); color: white; }
   .ic-btn-cancel { background: white; border-color: var(--border); color: #777; }
   .ic-btn-cancel:hover { background: var(--paper2); color: var(--ink); }
   .ic-btn-icon { font-size: 1.1rem; flex-shrink: 0; }
@@ -856,10 +1018,10 @@
     color: var(--ink);
     flex-shrink: 0;
   }
-  .btn-tts:hover { background: var(--blue-soft); border-color: var(--blue); }
+  .btn-tts:hover { background: var(--mint-pale); border-color: var(--mint-deep); }
   .btn-tts.speaking {
-    background: var(--blue-soft);
-    border-color: var(--blue);
+    background: var(--mint-pale);
+    border-color: var(--mint-deep);
     animation: tts-pulse 0.7s infinite alternate;
   }
   @keyframes tts-pulse {
@@ -880,21 +1042,117 @@
     text-align: center;
     margin-top: 4px;
   }
-  .icon-btn.tts-btn { color: var(--blue); border-color: var(--blue-soft); }
-  .icon-btn.tts-btn:hover { background: var(--blue-soft); border-color: var(--blue); }
-  .icon-btn.tts-btn.speaking { background: var(--blue-soft); border-color: var(--blue); animation: tts-pulse 0.7s infinite alternate; }
+  .icon-btn.tts-btn { color: var(--mint-deep); border-color: var(--mint-pale); }
+  .icon-btn.tts-btn:hover { background: var(--mint-pale); border-color: var(--mint-deep); }
+  .icon-btn.tts-btn.speaking { background: var(--mint-pale); border-color: var(--mint-deep); animation: tts-pulse 0.7s infinite alternate; }
+
+  /* ── Example Sentence ── */
+  .card .example-block {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-top: 1px dashed var(--border);
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .example-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #aaa;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .example-jp {
+    font-family: 'Noto Serif JP', serif;
+    font-size: clamp(0.82rem, 2.2vw, 1rem);
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  .example-kr {
+    font-size: clamp(0.75rem, 2vw, 0.88rem);
+    color: #777;
+    line-height: 1.5;
+    opacity: 0;
+    transition: opacity 0.4s ease 0.15s;
+  }
+  .example-kr.show { opacity: 1; }
+
+  /* Edit mode: example textarea row */
+  .example-edit-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .example-edit-wrap textarea {
+    border: 1px solid var(--mint);
+    border-radius: 4px;
+    padding: 5px 7px;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.88rem;
+    width: 100%;
+    background: white;
+    outline: none;
+    resize: vertical;
+    min-height: 46px;
+    line-height: 1.5;
+  }
+  .example-edit-wrap textarea.kr-area {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 0.84rem;
+  }
+  .example-edit-wrap textarea:focus {
+    border-color: var(--ink);
+    box-shadow: 0 0 0 2px var(--mint-soft);
+  }
+  .example-edit-label {
+    font-size: 0.7rem;
+    color: #aaa;
+    font-weight: 600;
+    margin-bottom: 1px;
+  }
+
+  /* 버튼 안 키보드 뱃지 */
+  .btn-kb-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 20px;
+    padding: 0 6px;
+    margin-left: 4px;
+    background: currentColor;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-family: ui-monospace, 'SF Mono', 'Segoe UI Symbol', 'Apple Symbols', monospace;
+    letter-spacing: 0.02em;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+  .btn-kb-badge::before {
+    content: attr(data-key);
+    color: white;
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>日本語 단어장<span>JAPANESE VOCABULARY</span></h1>
-  <div style="display:flex;align-items:center;gap:8px">
-    <span id="sync-status" style="font-size:0.72rem;opacity:0.85;white-space:nowrap">⏳ 불러오는 중…</span>
-    <button class="kb-settings-btn" onclick="openOptsModal()" title="옵션">⚙️ 옵션</button>
+  <h1 class="header-title">日本語 단어장<span>JAPANESE VOCABULARY</span></h1>
+  <div class="header-right">
+    <span id="sync-status" class="sync-status-text" style="font-size:0.72rem;opacity:0.85;white-space:nowrap">⏳ 불러오는 중…</span>
+    <div style="display:flex;align-items:center;gap:2px;background:rgba(0,0,0,0.25);border-radius:6px;padding:3px">
+      <button class="kb-settings-btn font-btn" onclick="adjustFontSize(-1)" title="글자 축소">−</button>
+      <button class="kb-settings-btn font-btn" id="font-size-reset-btn" onclick="adjustFontSize(0)" title="기본 크기" style="min-width:28px;justify-content:center">A</button>
+      <button class="kb-settings-btn font-btn" onclick="adjustFontSize(1)" title="글자 확대">＋</button>
+    </div>
+    <button class="kb-settings-btn" onclick="openOptsModal()" title="옵션"><span class="opts-label">⚙️ 옵션</span><span class="opts-icon" style="display:none">⚙️</span></button>
     <div class="tab-bar">
-      <button class="tab-btn active" onclick="switchTab('quiz', this)">📖 퀴즈</button>
-      <button class="tab-btn" onclick="switchTab('edit', this)">✏️ 수정</button>
+      <button class="tab-btn active" onclick="switchTab('quiz', this)">📖 <span class="tab-label">퀴즈</span></button>
+      <button class="tab-btn" onclick="switchTab('edit', this)">✏️ <span class="tab-label">수정</span></button>
     </div>
   </div>
 </header>
@@ -908,6 +1166,7 @@
     </div>
     <div class="opts-tabs">
       <button class="opts-tab active" onclick="switchOptsTab('tts', this)">🔊 음성</button>
+      <button class="opts-tab" onclick="switchOptsTab('quiz', this)">📖 퀴즈</button>
       <button class="opts-tab" onclick="switchOptsTab('kb', this)">⌨️ 키보드</button>
     </div>
     <div class="opts-body">
@@ -949,6 +1208,7 @@
                 oninput="updateVolDisplay(this.value)" onchange="saveOptsSettings()">
               <span class="vol-val" id="vol-display">100%</span>
               <span style="font-size:0.9rem">🔊</span>
+              <button class="reset-val-btn" onclick="resetVolume()" title="50%로 초기화">↺</button>
             </div>
           </div>
         </div>
@@ -964,8 +1224,34 @@
                 oninput="updateRateDisplay(this.value)" onchange="saveOptsSettings()">
               <span class="vol-val" id="rate-display">0.85×</span>
               <span style="font-size:0.8rem;color:#999">빠름</span>
+              <button class="reset-val-btn" onclick="resetRate()" title="1.00×로 초기화">↺</button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Quiz Panel -->
+      <div class="opts-panel" id="opts-panel-quiz">
+        <div class="opts-section-title">퀴즈 설정</div>
+        <div class="opts-row">
+          <div>
+            <div class="opts-row-label">🔀 셔플</div>
+            <div class="opts-row-sub">단어를 매 라운드 무작위 순서로 출제합니다. 끄면 등록 순서대로 나옵니다.</div>
+          </div>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="opt-shuffle" onchange="onShuffleToggle(this.checked)">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="opts-row">
+          <div>
+            <div class="opts-row-label">📝 예문 표시</div>
+            <div class="opts-row-sub">예문이 있는 단어의 경우 퀴즈 카드에 일본어 예문을 표시합니다. 한국어 해석은 정답 버튼을 눌러야 공개됩니다.</div>
+          </div>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="opt-show-example" onchange="saveOptsSettings()" checked>
+            <span class="toggle-track"></span>
+          </label>
         </div>
       </div>
 
@@ -987,6 +1273,11 @@
           <div class="kb-label"><span class="kb-badge done"></span>✓ 완료</div>
           <button class="kb-capture-btn" id="kbcap-done" onclick="startCapture('done')">—</button>
           <button class="kb-clear-btn" onclick="clearKey('done')" title="해제">✕</button>
+        </div>
+        <div class="kb-row">
+          <div class="kb-label"><span class="kb-badge" style="background:var(--mint-deep)"></span>🔊 소리 재생</div>
+          <button class="kb-capture-btn" id="kbcap-tts" onclick="startCapture('tts')">—</button>
+          <button class="kb-clear-btn" onclick="clearKey('tts')" title="해제">✕</button>
         </div>
       </div>
 
@@ -1044,50 +1335,110 @@
 <!-- ── QUIZ PAGE ── -->
 <div class="page active" id="page-quiz">
   <div class="quiz-stats">
-    <div class="stat-chip remain" id="stat-remain">남은 단어: 0</div>
-    <div class="stat-chip carry" id="stat-carry">이월: 0</div>
-    <div class="stat-chip done" id="stat-done">완료: 0</div>
-    <button class="btn btn-carry-review" id="btn-repeat-all" onclick="repeatRemaining()" style="border-color:var(--blue);background:var(--blue-soft);color:var(--blue)">🔁 전체 다시 반복</button>
-    <span class="threshold-wrap" style="display:flex;align-items:center;gap:4px">
-      <button class="btn btn-carry-review" id="btn-carry-threshold" onclick="toggleCarryThresholdMode()" style="border-color:var(--gold);background:var(--gold-soft);color:var(--gold)">🔢 2회↑ 이월</button>
-      <select id="threshold-select" onchange="setCarryThreshold(this.value)" style="border:1.5px solid var(--gold);border-radius:4px;padding:4px 6px;font-size:0.78rem;background:var(--gold-soft);color:var(--gold);cursor:pointer;font-family:inherit">
-        <option value="1">1회↑</option>
-        <option value="2" selected>2회↑</option>
-        <option value="3">3회↑</option>
-        <option value="4">4회↑</option>
-        <option value="5">5회↑</option>
-      </select>
-    </span>
+    <div class="quiz-stats-row">
+      <div class="stat-chip remain" id="stat-remain">남은 단어: 0</div>
+      <div class="stat-chip carry" id="stat-carry">이월: 0</div>
+      <div class="stat-chip done" id="stat-done">완료: 0</div>
+    </div>
+    <div class="quiz-stats-row">
+      <button class="btn btn-carry-review" id="btn-repeat-all" onclick="repeatRemaining()" style="border-color:var(--mint-deep);background:var(--mint-pale);color:var(--mint-deep)" title="완료 여부와 무관하게 전체 단어 반복">🔁 전체반복</button>
+      <span class="threshold-wrap" style="display:flex;align-items:center;gap:4px">
+        <button class="btn btn-carry-review" id="btn-carry-threshold" onclick="toggleCarryThresholdMode()" style="border-color:var(--mint);background:var(--mint-soft);color:var(--mint)" title="N회 이상 이월된 단어만 복습">↩ 이월복습</button>
+        <select id="threshold-select" onchange="setCarryThreshold(this.value)" style="border:1.5px solid var(--mint);border-radius:4px;padding:4px 6px;font-size:0.78rem;background:var(--mint-soft);color:var(--mint);cursor:pointer;font-family:inherit">
+          <option value="1">1회↑</option>
+          <option value="2" selected>2회↑</option>
+          <option value="3">3회↑</option>
+          <option value="4">4회↑</option>
+          <option value="5">5회↑</option>
+        </select>
+      </span>
+    </div>
   </div>
 
   <div class="progress-bar"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
 
-  <div id="kb-hint-bar" class="kb-hint-bar" style="display:none"></div>
   <div id="quiz-area"></div>
 </div>
 
 <!-- ── EDIT PAGE ── -->
 <div class="page" id="page-edit">
-  <div class="edit-toolbar">
-    <button class="btn btn-primary" onclick="addRow()">＋ 단어 추가</button>
-    <button class="btn btn-carry" onclick="resetCarry()" title="이월 표시 전체 초기화">🔄 이월 초기화</button>
-    <button class="btn" id="btn-checkbox-mode" onclick="toggleCheckboxMode()" style="border-color:var(--blue);background:var(--blue-soft);color:var(--blue)">☑ 일괄 선택</button>
-    <button class="btn" onclick="exportExcel()" style="border-color:var(--green);background:var(--green-soft);color:var(--green)" title="엑셀로 내보내기">📥 엑셀 내보내기</button>
-    <label class="btn" style="border-color:var(--gold);background:var(--gold-soft);color:var(--gold);cursor:pointer" title="엑셀 파일 가져오기">
-      📤 엑셀 가져오기
-      <input type="file" id="excel-import-input" accept=".xlsx,.xls" style="display:none" onchange="importExcel(event)">
-    </label>
-    <button class="btn" onclick="openBackupModal()" style="border-color:#7c5cbf;background:#ede8f8;color:#7c5cbf" title="백업 관리">💾 백업</button>
-    <span id="word-count-label"></span>
+
+  <!-- 툴바 1행: 주요 액션 -->
+  <div class="edit-toolbar" style="margin-bottom:8px">
+    <button class="btn btn-primary" onclick="addRow()" style="padding:5px 14px;font-size:0.82rem">＋ 추가</button>
+    <button class="btn" id="btn-checkbox-mode" onclick="toggleCheckboxMode()" style="padding:5px 14px;font-size:0.82rem;border-color:var(--mint-deep);background:var(--mint-pale);color:var(--mint-deep)">☑ 선택</button>
+
+    <!-- 관리 드롭다운 (이월+엑셀 통합) -->
+    <div class="dropdown-wrap">
+      <button class="btn" onclick="toggleDropdown('manage-dropdown')" style="padding:5px 14px;font-size:0.82rem;border-color:var(--border);background:white;color:var(--ink)">⋯ 관리 ▾</button>
+      <div class="dropdown-menu" id="manage-dropdown">
+        <div style="padding:6px 14px 4px;font-size:0.7rem;font-weight:700;letter-spacing:0.07em;color:#aaa;text-transform:uppercase">엑셀 / 백업</div>
+        <button class="dropdown-item success" onclick="exportExcel(); closeDropdown('manage-dropdown')">📥 엑셀 내보내기</button>
+        <label class="dropdown-item gold" style="cursor:pointer">
+          📤 엑셀 가져오기
+          <input type="file" id="excel-import-input" accept=".xlsx,.xls" style="display:none" onchange="importExcel(event); closeDropdown('manage-dropdown')">
+        </label>
+        <button class="dropdown-item" onclick="openBackupModal(); closeDropdown('manage-dropdown')" style="color:var(--mint)">💾 백업 관리</button>
+        <div class="dropdown-divider"></div>
+        <div style="padding:6px 14px 4px;font-size:0.7rem;font-weight:700;letter-spacing:0.07em;color:#aaa;text-transform:uppercase">이월 관리</div>
+        <button class="dropdown-item danger" onclick="resetCarry(); closeDropdown('manage-dropdown')">🔄 이월 초기화 <span style="font-size:0.75rem;opacity:0.6;margin-left:auto">현재 이월 해제</span></button>
+        <button class="dropdown-item" onclick="resetCarryHistory(); closeDropdown('manage-dropdown')" style="color:var(--mint)">🗓 이력 해제 <span style="font-size:0.75rem;opacity:0.6;margin-left:auto">이력만 삭제</span></button>
+        <button class="dropdown-item danger" onclick="resetCarryAll(); closeDropdown('manage-dropdown')">🗑 전체 초기화 <span style="font-size:0.75rem;opacity:0.6;margin-left:auto">이월+이력</span></button>
+      </div>
+    </div>
+
+    <span id="word-count-label" style="font-size:0.8rem;color:#888;margin-left:4px"></span>
   </div>
+
+  <!-- 툴바 2행: 필터/정렬/페이지 -->
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+    <!-- 품사 필터 -->
+    <select id="type-filter-select" onchange="onTypeFilterChange(this.value)"
+      style="border:1.5px solid var(--border);border-radius:4px;padding:5px 8px;font-size:0.78rem;background:white;color:var(--ink);cursor:pointer;font-family:inherit;width:auto">
+      <option value="">전체 품사</option>
+      <option value="명사">명사</option>
+      <option value="동사">동사</option>
+      <option value="형용사">형용사</option>
+      <option value="나형용사">나형용사</option>
+      <option value="부사">부사</option>
+      <option value="조사">조사</option>
+      <option value="접속사">접속사</option>
+      <option value="기타">기타</option>
+    </select>
+    <!-- 정렬 -->
+    <select id="sort-select" onchange="onSortChange(this.value)"
+      style="border:1.5px solid var(--border);border-radius:4px;padding:5px 8px;font-size:0.78rem;background:white;color:var(--ink);cursor:pointer;font-family:inherit;width:auto">
+      <option value="oldest">오래된 순</option>
+      <option value="newest">최신 순</option>
+      <option value="kanji">단어순 (가나)</option>
+      <option value="furigana">후리가나순</option>
+      <option value="carry">이월 많은 순</option>
+    </select>
+    <!-- 페이지 크기 -->
+    <div style="display:flex;align-items:center;gap:5px;margin-left:auto">
+      <label style="font-size:0.75rem;color:#aaa;white-space:nowrap">페이지당</label>
+      <select id="page-size-select" onchange="onPageSizeChange(this.value)"
+        style="border:1.5px solid var(--mint);border-radius:4px;padding:5px 6px;font-size:0.78rem;background:var(--mint-soft);color:var(--mint);cursor:pointer;font-family:inherit">
+        <option value="5">5개</option>
+        <option value="10">10개</option>
+        <option value="15">15개</option>
+        <option value="20" selected>20개</option>
+        <option value="30">30개</option>
+        <option value="50">50개</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 페이지네이션 바 (상단) -->
+  <div id="pagination-bar-top" style="display:none;margin-bottom:10px"></div>
   <!-- 체크박스 모드 액션 바 -->
-  <div id="checkbox-action-bar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--blue-soft);border:1.5px solid var(--blue);border-radius:8px;display:none;align-items:center;gap:10px;flex-wrap:wrap">
-    <span id="selected-count-label" style="font-size:0.82rem;color:var(--blue);font-weight:600">0개 선택됨</span>
-    <button class="btn" style="padding:6px 14px;font-size:0.8rem;border-color:var(--blue);background:var(--blue);color:white" onclick="selectAllCheckboxes()">전체 선택</button>
-    <button class="btn" style="padding:6px 14px;font-size:0.8rem;border-color:var(--border);background:white;color:#555" onclick="deselectAllCheckboxes()">선택 해제</button>
-    <button class="btn btn-danger" style="padding:6px 14px;font-size:0.8rem" onclick="deleteSelected()">🗑 선택 삭제</button>
-    <button class="btn btn-carry" style="padding:6px 14px;font-size:0.8rem" onclick="markCarrySelected()">↩ 이월 표시</button>
-    <button class="btn btn-done" style="padding:6px 14px;font-size:0.8rem" onclick="clearCarrySelected()">✓ 이월 해제</button>
+  <div id="checkbox-action-bar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--mint-pale);border:1.5px solid var(--mint-deep);border-radius:8px;align-items:center;gap:8px;flex-wrap:wrap">
+    <span id="selected-count-label" style="font-size:0.82rem;color:var(--mint-deep);font-weight:600">0개 선택됨</span>
+    <button class="btn" style="padding:5px 12px;font-size:0.78rem;border-color:var(--mint-deep);background:var(--mint-deep);color:white" onclick="selectAllCheckboxes()">전체</button>
+    <button class="btn" style="padding:5px 12px;font-size:0.78rem;border-color:var(--border);background:white;color:#555" onclick="deselectAllCheckboxes()">해제</button>
+    <button class="btn btn-danger" style="padding:5px 12px;font-size:0.78rem" onclick="deleteSelected()">🗑 삭제</button>
+    <button class="btn btn-carry" style="padding:5px 12px;font-size:0.78rem" onclick="markCarrySelected()">↩ 이월</button>
+    <button class="btn btn-done" style="padding:5px 12px;font-size:0.78rem" onclick="clearCarrySelected()">✓ 해제</button>
   </div>
   <div class="vocab-table-wrap">
     <table id="vocab-table">
@@ -1105,6 +1456,9 @@
       <tbody id="tbody"></tbody>
     </table>
   </div>
+  <div class="word-card-list" id="word-card-list"></div>
+  <!-- 페이지네이션 바 (하단) -->
+  <div id="pagination-bar-bottom" style="margin-top:12px"></div>
 </div>
 
 <div id="toast"></div>
@@ -1168,6 +1522,122 @@ let nextId = 100;
 let checkboxMode = false;
 let selectedIds = new Set();
 
+// ── 페이지네이션 ──
+const PAGE_SIZE_KEY = 'jp_vocab_pagesize_v1';
+const SORT_KEY = 'jp_vocab_sort_v1';
+const TYPE_FILTER_KEY = 'jp_vocab_typefilter_v1';
+let editPageSize = 20;
+let editCurrentPage = 1;
+let editSortMode = 'oldest';   // oldest | newest | kanji | furigana | carry
+let editTypeFilter = '';       // '' = 전체, 그 외 품사명
+
+function loadPageSize() {
+  const saved = localStorage.getItem(PAGE_SIZE_KEY);
+  if (saved) {
+    editPageSize = parseInt(saved);
+    const sel = document.getElementById('page-size-select');
+    if (sel) sel.value = String(editPageSize);
+  }
+}
+
+function loadSortAndFilter() {
+  const savedSort = localStorage.getItem(SORT_KEY);
+  if (savedSort) {
+    editSortMode = savedSort;
+    const sel = document.getElementById('sort-select');
+    if (sel) sel.value = editSortMode;
+  }
+  const savedFilter = localStorage.getItem(TYPE_FILTER_KEY);
+  if (savedFilter !== null) {
+    editTypeFilter = savedFilter;
+    const sel = document.getElementById('type-filter-select');
+    if (sel) sel.value = editTypeFilter;
+  }
+}
+
+function onSortChange(val) {
+  editSortMode = val;
+  editCurrentPage = 1;
+  localStorage.setItem(SORT_KEY, val);
+  renderEditTable();
+}
+
+function onTypeFilterChange(val) {
+  editTypeFilter = val;
+  editCurrentPage = 1;
+  localStorage.setItem(TYPE_FILTER_KEY, val);
+  renderEditTable();
+}
+
+// 현재 정렬+필터 적용된 단어 목록 반환
+function getFilteredSortedWords() {
+  let list = editTypeFilter
+    ? words.filter(w => (w.type || '') === editTypeFilter)
+    : [...words];
+
+  switch (editSortMode) {
+    case 'newest':
+      list = list.slice().reverse();
+      break;
+    case 'kanji':
+      list = list.slice().sort((a, b) => a.kanji.localeCompare(b.kanji, 'ja'));
+      break;
+    case 'furigana':
+      list = list.slice().sort((a, b) => (a.furigana || a.kanji).localeCompare(b.furigana || b.kanji, 'ja'));
+      break;
+    case 'carry':
+      list = list.slice().sort((a, b) => {
+        const ca = carryCount[a.id] || 0;
+        const cb = carryCount[b.id] || 0;
+        if (cb !== ca) return cb - ca;
+        // 이월 같을 땐 오래된 순 (id 오름차순)
+        return a.id - b.id;
+      });
+      break;
+    // 'oldest': 기본 순서 유지
+  }
+  return list;
+}
+
+function onPageSizeChange(val) {
+  editPageSize = parseInt(val);
+  editCurrentPage = 1;
+  localStorage.setItem(PAGE_SIZE_KEY, String(editPageSize));
+  renderEditTable();
+}
+
+function goToPage(page) {
+  editCurrentPage = page;
+  renderEditTable();
+  document.getElementById('page-edit').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderPaginationBar(totalPages, barId) {
+  const bar = document.getElementById(barId);
+  if (!bar) return;
+  if (totalPages <= 1) { bar.innerHTML = ''; bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  bar.style.cssText = 'display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:center;margin:4px 0';
+
+  const btnStyle = (active) =>
+    `style="padding:5px 11px;border-radius:5px;border:1.5px solid ${active ? 'var(--mint-deep)' : 'var(--border)'};background:${active ? 'var(--mint-deep)' : 'white'};color:${active ? 'white' : 'var(--ink)'};font-family:inherit;font-size:0.8rem;font-weight:600;cursor:${active ? 'default' : 'pointer'};transition:all 0.15s"`;
+
+  let html = `<button ${btnStyle(false)} onclick="goToPage(${editCurrentPage - 1})" ${editCurrentPage === 1 ? 'disabled style="opacity:0.35;cursor:default"' : ''}>‹</button>`;
+  for (let p = 1; p <= totalPages; p++) {
+    if (totalPages > 9 && Math.abs(p - editCurrentPage) > 2 && p !== 1 && p !== totalPages) {
+      if (p === 2 || p === totalPages - 1) html += `<span style="padding:0 2px;color:#aaa">…</span>`;
+      continue;
+    }
+    html += `<button ${btnStyle(p === editCurrentPage)} onclick="goToPage(${p})">${p}</button>`;
+  }
+  html += `<button ${btnStyle(false)} onclick="goToPage(${editCurrentPage + 1})" ${editCurrentPage === totalPages ? 'disabled style="opacity:0.35;cursor:default"' : ''}>›</button>`;
+  html += `<span style="font-size:0.75rem;color:#999;margin-left:4px">${editCurrentPage}/${totalPages} 페이지</span>`;
+  bar.innerHTML = html;
+}
+
+let shuffleMode = true; // 기본값: 셔플 ON
+const SHUFFLE_KEY = 'jp_vocab_shuffle_v1';
+
 const STORAGE_KEY = 'jp_vocab_v1';
 
 // ── 동기 저장 (quiz 진행상황 — 빠른 UX를 위해 localStorage 유지) ──
@@ -1216,11 +1686,13 @@ async function load() {
       showToast('기본 단어 8개를 Supabase에 저장했습니다');
     }
     words = rows.map(r => ({
-      id:       r.id,
-      kanji:    r.kanji,
-      furigana: r.furigana,
-      meaning:  r.meaning,
-      type:     r.type || '명사'
+      id:        r.id,
+      kanji:     r.kanji,
+      furigana:  r.furigana,
+      meaning:   r.meaning,
+      type:      r.type || '명사',
+      exampleJp: r.example_jp || '',
+      exampleKr: r.example_kr || '',
     }));
     nextId = words.reduce((m,w) => Math.max(m, w.id), 0) + 1;
     loadProgress();
@@ -1246,13 +1718,13 @@ function showSyncStatus(state, msg) {
   if (!el) return;
   if (state === 'loading') {
     el.textContent = '⏳ 불러오는 중…';
-    el.style.color = 'var(--gold)';
+    el.style.color = '#a8e6d8';
   } else if (state === 'ok') {
     el.textContent = '☁️ 동기화됨';
-    el.style.color = 'var(--green)';
+    el.style.color = '#a8e6d8';
   } else if (state === 'saving') {
     el.textContent = '💾 저장 중…';
-    el.style.color = 'var(--blue)';
+    el.style.color = '#a8e6d8';
   } else if (state === 'error') {
     el.textContent = '⚠️ 오프라인 모드';
     el.style.color = 'var(--red)';
@@ -1262,6 +1734,7 @@ function showSyncStatus(state, msg) {
 
 // ── Tab Switching ──
 function switchTab(tab, btn) {
+  _ttsStop();
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + tab).classList.add('active');
@@ -1276,19 +1749,17 @@ function switchTab(tab, btn) {
 function buildQueue() {
   roundDone = false;
   if (carryThresholdMode) {
-    // N회 이상 이월된 단어만 (완료 여부 무시)
     const pool = words.filter(w => (carryCount[w.id] || 0) >= carryThreshold);
-    shuffle(pool);
+    if (shuffleMode) shuffle(pool);
     quizQueue = pool;
   } else if (carryOnlyMode) {
     const pool = words.filter(w => carryHistory.has(w.id));
-    shuffle(pool);
+    if (shuffleMode) shuffle(pool);
     quizQueue = pool;
   } else {
-    // carry words first, then remaining undone words
     const carried = words.filter(w => carrySet.has(w.id));
     const fresh = words.filter(w => !doneSet.has(w.id) && !carrySet.has(w.id));
-    shuffle(carried); shuffle(fresh);
+    if (shuffleMode) { shuffle(carried); shuffle(fresh); }
     quizQueue = [...carried, ...fresh];
   }
   currentIdx = 0;
@@ -1322,10 +1793,10 @@ function updateStats() {
   const pct = progressTotal ? Math.round(progressDone / progressTotal * 100) : 0;
   document.getElementById('progress-fill').style.width = pct + '%';
 
-  // 전체 반복 버튼 (남은 단어 반복)
+  // 전체 반복 버튼
   const btnAll = document.getElementById('btn-repeat-all');
   if (btnAll) {
-    btnAll.textContent = `🔁 전체 다시 반복 (${words.length})`;
+    btnAll.textContent = `🔁 전체반복 (${words.length})`;
     btnAll.disabled = words.length === 0;
     btnAll.style.opacity = words.length === 0 ? '0.4' : '';
   }
@@ -1334,7 +1805,7 @@ function updateStats() {
   const btnThresh = document.getElementById('btn-carry-threshold');
   if (btnThresh) {
     const threshCount = words.filter(w => (carryCount[w.id] || 0) >= carryThreshold).length;
-    btnThresh.textContent = `🔢 ${carryThreshold}회↑ 이월 (${threshCount})`;
+    btnThresh.textContent = `↩ 이월복습 (${threshCount})`;
     btnThresh.classList.toggle('active-mode', carryThresholdMode);
     btnThresh.disabled = threshCount === 0;
     btnThresh.style.opacity = threshCount === 0 ? '0.4' : '';
@@ -1348,9 +1819,9 @@ function renderQuiz() {
   // mode banner
   let bannerHtml = '';
   if (carryThresholdMode) {
-    bannerHtml = `<div class="mode-banner" style="background:var(--gold-soft);border-color:var(--gold);color:var(--gold)">🔢 ${carryThreshold}회 이상 이월 단어 복습 중 <button onclick="exitAllModes()" style="border-color:var(--gold);color:var(--gold)">✕ 일반 모드로</button></div>`;
+    bannerHtml = `<div class="mode-banner" style="background:var(--mint-soft);border-color:var(--mint);color:var(--mint)">↩ ${carryThreshold}회↑ 이월 복습 중 <button onclick="exitAllModes()" style="border-color:var(--mint);color:var(--mint)">✕ 일반 모드</button></div>`;
   } else if (carryOnlyMode) {
-    bannerHtml = `<div class="mode-banner">↩ 이월 단어만 복습 중 <button onclick="exitCarryOnlyMode()">✕ 전체 모드로</button></div>`;
+    bannerHtml = `<div class="mode-banner">↩ 이월 단어 복습 중 <button onclick="exitCarryOnlyMode()">✕ 일반 모드</button></div>`;
   }
 
   // Re-build queue if needed (일반 모드만 자동 재빌드)
@@ -1410,10 +1881,10 @@ function renderQuiz() {
 
   const isCarried = carrySet.has(w.id);
   const wCarryCount = carryCount[w.id] || 0;
-  const typeBadge = w.type ? `<span class="type-badge">${w.type}</span>` : '';
+  const typeBadge = '';
   const carryIndicator = isCarried
     ? `<div style="color:var(--red);font-size:0.78rem;margin-bottom:8px;font-weight:600">↩ 이월 단어${wCarryCount > 0 ? ` (누적 ${wCarryCount}회)` : ''}</div>`
-    : (wCarryCount > 0 ? `<div style="color:var(--gold);font-size:0.75rem;margin-bottom:6px">이월 이력: ${wCarryCount}회</div>` : '');
+    : (wCarryCount > 0 ? `<div style="color:var(--mint);font-size:0.75rem;margin-bottom:6px">이월 이력: ${wCarryCount}회</div>` : '');
 
   area.innerHTML = bannerHtml + `
     <div class="card-wrapper">
@@ -1422,7 +1893,13 @@ function renderQuiz() {
         ${carryIndicator}
         <div class="kanji">${w.kanji}</div>
         <div class="furigana" id="furi">${w.furigana}</div>
-        <div class="meaning" id="mean">${w.meaning}</div>
+        <div class="meaning" id="mean">${w.type ? `<span class="meaning-type-badge">${esc(w.type)}</span>` : ''}<span>${esc(w.meaning)}</span></div>
+        ${(optsSettings.showExample && w.exampleJp) ? `
+        <div class="example-block" id="example-block">
+          <div class="example-label">예문</div>
+          <div class="example-jp">${esc(w.exampleJp)}</div>
+          ${w.exampleKr ? `<div class="example-kr" id="example-kr">${esc(w.exampleKr)}</div>` : ''}
+        </div>` : ''}
         ${(!optsSettings.ttsAutoplay && !optsSettings.ttsAutoReveal) ? `
         <div class="card-tts-wrap">
           <button class="btn-tts" id="tts-btn-card" onclick="speakCurrentWord(this)" title="발음 듣기">🔊</button>
@@ -1430,7 +1907,7 @@ function renderQuiz() {
       </div>
     </div>
     <div class="btn-row" id="btn-row">
-      <button class="btn btn-reveal" onclick="reveal()">👁 정답 보기</button>
+      <button class="btn btn-reveal" onclick="reveal()">👁 정답 보기${kbBadge(keyBindings.reveal)}</button>
     </div>
   `;
   _ttsText = w.furigana || w.kanji;
@@ -1441,9 +1918,13 @@ function reveal() {
   document.getElementById('mean').classList.add('show');
   revealed = true;
 
+  // 예문 한국어 번역 공개
+  const exKr = document.getElementById('example-kr');
+  if (exKr) exKr.classList.add('show');
+
   document.getElementById('btn-row').innerHTML = `
-    <button class="btn btn-carry" onclick="markCarry()">↩ 이월</button>
-    <button class="btn btn-done" onclick="markDone()">✓ 완료</button>
+    <button class="btn btn-carry" onclick="markCarry()">↩ 이월${kbBadge(keyBindings.carry)}</button>
+    <button class="btn btn-done" onclick="markDone()">✓ 완료${kbBadge(keyBindings.done)}</button>
   `;
 
   // 정답 공개 시 자동 발음
@@ -1491,6 +1972,29 @@ function resetCarry() {
   showToast('이월 초기화 완료');
 }
 
+function resetCarryHistory() {
+  if (!confirm('이월 이력(횟수)을 전체 삭제할까요?\n현재 이월 상태는 유지됩니다.')) return;
+  carryHistory.clear();
+  carryCount = {};
+  save();
+  renderEditTable();
+  renderQuiz();
+  showToast('이월 이력 삭제 완료');
+}
+
+function resetCarryAll() {
+  if (!confirm('이월 표시와 이력(횟수)을 모두 초기화할까요?\n퀴즈 진행 상황도 함께 초기화됩니다.')) return;
+  carrySet.clear();
+  doneSet.clear();
+  carryHistory.clear();
+  carryCount = {};
+  buildQueue();
+  save();
+  renderEditTable();
+  renderQuiz();
+  showToast('이월 및 이력 전체 초기화 완료');
+}
+
 function toggleCarryOnlyMode() {
   const histCount = words.filter(w => carryHistory.has(w.id)).length;
   if (histCount === 0) { showToast('이월한 단어가 없습니다'); return; }
@@ -1522,13 +2026,12 @@ function restartCarryMode() {
 
 function repeatRemaining() {
   if (words.length === 0) { showToast('단어가 없습니다'); return; }
-  // 완료 여부와 무관하게 전체 단어를 셔플해서 다시 반복
   const pool = [...words];
-  shuffle(pool);
+  if (shuffleMode) shuffle(pool);
   quizQueue = pool;
   currentIdx = 0;
   renderQuiz();
-  showToast(`전체 ${words.length}개 단어 다시 반복!`);
+  showToast(`전체 ${words.length}개 단어 다시 반복!${shuffleMode ? ' (셔플)' : ' (순서대로)'}`);
 }
 
 function toggleCarryThresholdMode() {
@@ -1557,7 +2060,6 @@ function setCarryThreshold(val) {
 // ──────────────────────────────────────
 function renderEditTable() {
   const tbody = document.getElementById('tbody');
-  document.getElementById('word-count-label').textContent = `총 ${words.length}개`;
 
   // Update thead checkbox column
   const theadRow = document.getElementById('thead-row');
@@ -1567,12 +2069,34 @@ function renderEditTable() {
     theadRow.cells[0].innerHTML = '#';
   }
 
-  if (words.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="no-words">단어가 없습니다. 위 버튼으로 추가해 보세요!</td></tr>`;
+  const displayWords = getFilteredSortedWords();
+  const totalFiltered = displayWords.length;
+  // 라벨: 필터 중이면 "X / Y개", 아니면 "총 Y개"
+  const countLabel = editTypeFilter
+    ? `${totalFiltered} / 총 ${words.length}개`
+    : `총 ${words.length}개`;
+  document.getElementById('word-count-label').textContent = countLabel;
+
+  if (displayWords.length === 0) {
+    const msg = editTypeFilter
+      ? `'${editTypeFilter}' 품사의 단어가 없습니다.`
+      : '단어가 없습니다. 위 버튼으로 추가해 보세요!';
+    tbody.innerHTML = `<tr><td colspan="7" class="no-words">${msg}</td></tr>`;
+    renderPaginationBar(0, 'pagination-bar-top');
+    renderPaginationBar(0, 'pagination-bar-bottom');
+    const cardList = document.getElementById('word-card-list');
+    if (cardList) cardList.innerHTML = '';
     return;
   }
 
-  tbody.innerHTML = words.map((w, i) => {
+  // 페이지네이션 계산
+  const totalPages = Math.max(1, Math.ceil(displayWords.length / editPageSize));
+  if (editCurrentPage > totalPages) editCurrentPage = totalPages;
+  const startIdx = (editCurrentPage - 1) * editPageSize;
+  const pageWords = displayWords.slice(startIdx, startIdx + editPageSize);
+
+  tbody.innerHTML = pageWords.map((w, pi) => {
+    const i = startIdx + pi; // displayWords 내 인덱스 (표시용 번호)
     const checked = selectedIds.has(w.id) ? 'checked' : '';
     const firstCell = checkboxMode
       ? `<td><input type="checkbox" class="row-check" data-id="${w.id}" ${checked} onchange="updateCheckboxSelection(${w.id}, this.checked)" style="cursor:pointer"></td>`
@@ -1580,7 +2104,6 @@ function renderEditTable() {
     const actionCell = checkboxMode
       ? `<td class="actions-cell" style="color:#bbb;font-size:0.75rem">—</td>`
       : `<td class="actions-cell">
-          <button class="icon-btn tts-btn" onclick="speakWord(this, ${JSON.stringify(w.furigana || w.kanji)})" title="발음 듣기">🔊</button>
           <button class="icon-btn edit-btn" onclick="editRow(${w.id})" title="수정">✏️</button>
           <button class="icon-btn del-btn" onclick="deleteRow(${w.id})" title="삭제">🗑️</button>
         </td>`;
@@ -1594,9 +2117,9 @@ function renderEditTable() {
         <td>${(() => {
           const cnt = carryCount[w.id] || 0;
           const inCarry = carrySet.has(w.id);
-          if (inCarry && cnt > 0)  return `<span class="carry-dot"></span>이월 <span style="font-size:0.72rem;color:var(--gold)">(${cnt}회)</span>`;
+          if (inCarry && cnt > 0)  return `<span class="carry-dot"></span>이월 <span style="font-size:0.72rem;color:var(--mint)">(${cnt}회)</span>`;
           if (inCarry)             return `<span class="carry-dot"></span>이월`;
-          if (cnt > 0)             return `<span style="font-size:0.78rem;color:var(--gold)">이력 ${cnt}회</span>`;
+          if (cnt > 0)             return `<span style="font-size:0.78rem;color:var(--mint)">이력 ${cnt}회</span>`;
           return '';
         })()}</td>
         ${actionCell}
@@ -1604,7 +2127,49 @@ function renderEditTable() {
     `;
   }).join('');
 
+  renderPaginationBar(totalPages, 'pagination-bar-top');
+  renderPaginationBar(totalPages, 'pagination-bar-bottom');
   updateSelectedCountLabel();
+
+  // ── 카드형 렌더링 (좁은 화면용) ──
+  const cardList = document.getElementById('word-card-list');
+  if (!cardList) return;
+  cardList.innerHTML = pageWords.map((w, pi) => {
+    const i = startIdx + pi; // displayWords 내 인덱스
+    const checked = selectedIds.has(w.id) ? 'checked' : '';
+    const checkCell = checkboxMode
+      ? `<div class="word-card-check"><input type="checkbox" class="row-check" data-id="${w.id}" ${checked} onchange="updateCheckboxSelection(${w.id}, this.checked)" style="cursor:pointer"></div>`
+      : `<div class="word-card-check" style="color:#aaa;font-size:0.72rem;min-width:18px;text-align:center">${i+1}</div>`;
+    const carryHtml = (() => {
+      const cnt = carryCount[w.id] || 0;
+      const inCarry = carrySet.has(w.id);
+      if (inCarry && cnt > 0) return `<span class="word-card-carry">↩이월 (${cnt}회)</span>`;
+      if (inCarry)            return `<span class="word-card-carry">↩이월</span>`;
+      if (cnt > 0)            return `<span style="font-size:0.7rem;color:var(--mint)">이력 ${cnt}회</span>`;
+      return '';
+    })();
+    const actions = checkboxMode
+      ? ''
+      : `<div class="word-card-actions">
+          <button class="icon-btn edit-btn" onclick="editRow(${w.id})" title="수정">✏️</button>
+          <button class="icon-btn del-btn" onclick="deleteRow(${w.id})" title="삭제">🗑️</button>
+        </div>`;
+    return `
+      <div class="word-card ${selectedIds.has(w.id) ? 'row-selected' : ''}" id="card-${w.id}"
+           onclick="${checkboxMode ? `toggleRowCheck(${w.id})` : ''}">
+        ${checkCell}
+        <div class="word-card-body">
+          <div class="word-card-kanji">${esc(w.kanji)}</div>
+          ${w.furigana ? `<div class="word-card-furi">${esc(w.furigana)}</div>` : ''}
+          <div class="word-card-meaning">${esc(w.meaning)}</div>
+          <div class="word-card-meta">
+            ${w.type ? `<span class="word-card-type">${esc(w.type)}</span>` : ''}
+            ${carryHtml}
+          </div>
+        </div>
+        ${actions}
+      </div>`;
+  }).join('');
 }
 
 function editRow(id) {
@@ -1630,20 +2195,38 @@ function editRow(id) {
       <button class="icon-btn cancel-btn" onclick="renderEditTable()">✕</button>
     </td>
   `;
+  // 예문 입력 행 (별도 행으로 colspan 활용)
+  const exRow = document.createElement('tr');
+  exRow.id = 'exrow-' + id;
+  exRow.classList.add('editing');
+  exRow.innerHTML = `
+    <td colspan="7" style="padding:6px 10px 10px;background:#fffef8;border-top:none">
+      <div class="example-edit-wrap">
+        <div class="example-edit-label">📝 예문 (일본어) <span style="color:#ccc;font-weight:400">— 없으면 비워두세요</span></div>
+        <textarea id="e-exjp-${id}" class="jp-area" placeholder="일본어 예문 (선택)">${esc(w.exampleJp||'')}</textarea>
+        <div class="example-edit-label" style="margin-top:4px">🇰🇷 예문 해석 (한국어)</div>
+        <textarea id="e-exkr-${id}" class="kr-area" placeholder="한국어 해석 (선택)">${esc(w.exampleKr||'')}</textarea>
+      </div>
+    </td>
+  `;
+  row.insertAdjacentElement('afterend', exRow);
   document.getElementById('e-kanji-' + id).focus();
 }
 
 async function saveRow(id) {
   const w = words.find(x => x.id === id);
   if (!w) return;
-  const kanji    = document.getElementById('e-kanji-' + id).value.trim();
-  const furigana = document.getElementById('e-furi-' + id).value.trim();
-  const meaning  = document.getElementById('e-mean-' + id).value.trim();
-  const type     = document.getElementById('e-type-' + id).value;
+  const kanji     = document.getElementById('e-kanji-' + id).value.trim();
+  const furigana  = document.getElementById('e-furi-' + id).value.trim();
+  const meaning   = document.getElementById('e-mean-' + id).value.trim();
+  const type      = document.getElementById('e-type-' + id).value;
+  const exampleJp = (document.getElementById('e-exjp-' + id)?.value || '').trim();
+  const exampleKr = (document.getElementById('e-exkr-' + id)?.value || '').trim();
   if (!kanji) { showToast('단어를 입력해 주세요'); return; }
 
   // 낙관적 UI 업데이트
   w.kanji = kanji; w.furigana = furigana; w.meaning = meaning; w.type = type;
+  w.exampleJp = exampleJp; w.exampleKr = exampleKr;
   renderEditTable();
   showSyncStatus('saving');
 
@@ -1653,7 +2236,7 @@ async function saveRow(id) {
       const [row] = await sbFetch('vocab_words', {
         method: 'POST',
         prefer: 'return=representation',
-        body: JSON.stringify({ kanji, furigana, meaning, type })
+        body: JSON.stringify({ kanji, furigana, meaning, type, example_jp: exampleJp, example_kr: exampleKr })
       });
       // 서버 발급 id로 교체
       const oldId = w.id;
@@ -1668,7 +2251,7 @@ async function saveRow(id) {
       // 기존 단어 → PATCH
       await sbFetch(`vocab_words?id=eq.${id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ kanji, furigana, meaning, type })
+        body: JSON.stringify({ kanji, furigana, meaning, type, example_jp: exampleJp, example_kr: exampleKr })
       });
     }
     save();
@@ -1725,14 +2308,20 @@ function _speakViaGoogle(text, onOk, onFail) {
   const audio = new Audio(url);
   audio.volume = (optsSettings.ttsVolume ?? 100) / 100;
   audio.playbackRate = (optsSettings.ttsRate ?? 85) / 100;
-  audio.oncanplaythrough = () => { _ttsAudio = audio; audio.play().then(onOk).catch(onFail); };
-  audio.onerror = onFail;
+  let done = false;
+  const fail = () => { if (!done) { done = true; audio.src = ''; onFail(); } };
+  audio.oncanplaythrough = () => {
+    if (done) return;
+    done = true;
+    _ttsAudio = audio;
+    audio.play().then(onOk).catch(fail);
+  };
+  audio.onerror = audio.onabort = fail;
   audio.onended = () => _ttsReset();
-  // 3초 안에 로드 안 되면 fallback
-  setTimeout(() => { if (!_ttsAudio) onFail(); }, 3000);
+  setTimeout(fail, 2000);
 }
 
-// ── 방법 2: Web Speech API (오프라인/로컬 동작, 음성 팩 필요) ──
+// ── 방법 2: Web Speech API ──
 let _wsVoices = [];
 if (window.speechSynthesis) {
   const _syncVoices = () => { _wsVoices = speechSynthesis.getVoices(); };
@@ -1744,52 +2333,49 @@ function _speakViaWebSpeech(text, onOk, onFail) {
   if (!window.speechSynthesis) { onFail(); return; }
   speechSynthesis.cancel();
 
-  // cancel() 직후 speak() 하면 Chrome에서 씹히는 버그 → 50ms 딜레이
-  setTimeout(() => {
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang   = 'ja-JP';
-    utter.rate   = (optsSettings.ttsRate ?? 85) / 100;
-    utter.volume = (optsSettings.ttsVolume ?? 100) / 100;
-    utter.pitch  = 1;
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang   = 'ja-JP';
+  utter.rate   = (optsSettings.ttsRate ?? 85) / 100;
+  utter.volume = (optsSettings.ttsVolume ?? 100) / 100;
+  utter.pitch  = 1;
 
-    const jaVoice = _wsVoices.find(v => v.lang === 'ja-JP') || _wsVoices.find(v => v.lang.startsWith('ja'));
-    if (jaVoice) utter.voice = jaVoice;
+  const jaVoice = _wsVoices.find(v => v.lang === 'ja-JP') || _wsVoices.find(v => v.lang.startsWith('ja'));
+  if (jaVoice) utter.voice = jaVoice;
 
-    let started = false;
-    utter.onstart = () => { started = true; onOk(); };
-    utter.onend   = () => _ttsReset();
-    utter.onerror = (e) => {
-      if (e.error === 'interrupted') { _ttsReset(); return; }
-      onFail();
-    };
+  let done = false;
+  utter.onstart = () => { if (!done) { done = true; onOk(); } };
+  utter.onend   = () => _ttsReset();
+  utter.onerror = (e) => {
+    if (e.error === 'interrupted') { _ttsReset(); return; }
+    if (!done) { done = true; onFail(); }
+  };
 
-    speechSynthesis.speak(utter);
-    setTimeout(() => { if (speechSynthesis.paused) speechSynthesis.resume(); }, 100);
-    setTimeout(() => { if (!started) { speechSynthesis.cancel(); onFail(); } }, 2000);
-  }, 50);
+  speechSynthesis.speak(utter);
+  // resume 혹시 paused 상태일 때
+  setTimeout(() => { if (window.speechSynthesis && speechSynthesis.paused) speechSynthesis.resume(); }, 100);
+  // onstart가 오지 않으면 그냥 재생 중인 것으로 간주 (로컬 환경 대응)
+  setTimeout(() => { if (!done) { done = true; onOk(); } }, 800);
 }
 
 // ── 메인 함수: WebSpeech ──
 function speakWord(btn, text) {
   if (!text) return;
 
-  // 같은 버튼 다시 누르면 정지
-  if (_ttsSpeaking) {
-    _ttsStop();
-    if (btn === _ttsActiveBtn || btn.classList.contains('was-speaking')) return;
-  }
+  // 항상 초기화 후 시작 (stuck 방지)
   _ttsStop();
 
   _ttsSpeaking  = true;
   _ttsActiveBtn = btn;
-  btn.classList.add('speaking', 'was-speaking');
+  btn.classList.add('speaking');
 
   const onOk = () => {};
-
-  _speakViaWebSpeech(text, onOk, () => {
+  const onFail = () => {
     _ttsReset();
-    showToast('음성을 재생할 수 없습니다.\n일본어 음성 팩이 설치되어 있는지 확인하세요.');
-  });
+    showToast('음성을 재생할 수 없습니다.');
+  };
+
+  // Google TTS 시도 → 실패 시 Web Speech fallback
+  _speakViaGoogle(text, onOk, () => _speakViaWebSpeech(text, onOk, onFail));
 }
 
 function speakCurrentWord(btn) {
@@ -1992,9 +2578,9 @@ function importExcel(event) {
       });
 
       if (replace) {
-        words = inserted.map(r => ({ id:r.id, kanji:r.kanji, furigana:r.furigana, meaning:r.meaning, type:r.type||'명사' }));
+        words = inserted.map(r => ({ id:r.id, kanji:r.kanji, furigana:r.furigana, meaning:r.meaning, type:r.type||'명사', exampleJp:r.example_jp||'', exampleKr:r.example_kr||'' }));
       } else {
-        words.push(...inserted.map(r => ({ id:r.id, kanji:r.kanji, furigana:r.furigana, meaning:r.meaning, type:r.type||'명사' })));
+        words.push(...inserted.map(r => ({ id:r.id, kanji:r.kanji, furigana:r.furigana, meaning:r.meaning, type:r.type||'명사', exampleJp:r.example_jp||'', exampleKr:r.example_kr||'' })));
       }
       nextId = words.reduce((m,w) => Math.max(m, w.id), 0) + 1;
       save();
@@ -2030,6 +2616,17 @@ function addRow() {
   const id = -(nextId++);
   words.push({ id, kanji: '', furigana: '', meaning: '', type: '명사', _new: true });
   save();
+  // 필터/정렬을 기본값으로 리셋해야 새 단어가 보임 (oldest + 전체)
+  if (editTypeFilter || editSortMode !== 'oldest') {
+    editTypeFilter = '';
+    editSortMode = 'oldest';
+    const sf = document.getElementById('sort-select');
+    if (sf) sf.value = 'oldest';
+    const tf = document.getElementById('type-filter-select');
+    if (tf) tf.value = '';
+  }
+  // 새 단어가 추가된 마지막 페이지로 이동
+  editCurrentPage = Math.max(1, Math.ceil(words.length / editPageSize));
   renderEditTable();
   editRow(id);
   setTimeout(() => {
@@ -2045,12 +2642,12 @@ function toggleCheckboxMode() {
   const btn = document.getElementById('btn-checkbox-mode');
   const bar = document.getElementById('checkbox-action-bar');
   if (checkboxMode) {
-    btn.style.background = 'var(--blue)';
+    btn.style.background = 'var(--mint-deep)';
     btn.style.color = 'white';
     bar.style.display = 'flex';
   } else {
-    btn.style.background = 'var(--blue-soft)';
-    btn.style.color = 'var(--blue)';
+    btn.style.background = 'var(--mint-pale)';
+    btn.style.color = 'var(--mint-deep)';
     bar.style.display = 'none';
   }
   renderEditTable();
@@ -2160,6 +2757,7 @@ let optsSettings = {
   ttsAutoReveal: false,   // 정답 공개 시 자동 발음
   ttsVolume:     100,     // 0~100
   ttsRate:       85,      // 50~150 (실제값 /100)
+  showExample:   true,    // 퀴즈에서 예문 표시
 };
 
 function loadOptsSettings() {
@@ -2174,6 +2772,7 @@ function saveOptsSettings() {
   optsSettings.ttsAutoReveal = document.getElementById('opt-tts-autoreveal').checked;
   optsSettings.ttsVolume     = parseInt(document.getElementById('opt-tts-volume').value);
   optsSettings.ttsRate       = parseInt(document.getElementById('opt-tts-rate').value);
+  optsSettings.showExample   = document.getElementById('opt-show-example')?.checked ?? true;
   localStorage.setItem(OPTS_KEY, JSON.stringify(optsSettings));
   // 버튼 표시 여부 즉시 반영
   renderQuiz();
@@ -2186,6 +2785,10 @@ function syncOptsUI() {
   document.getElementById('opt-tts-rate').value         = optsSettings.ttsRate;
   updateVolDisplay(optsSettings.ttsVolume);
   updateRateDisplay(optsSettings.ttsRate);
+  const cb = document.getElementById('opt-shuffle');
+  if (cb) cb.checked = shuffleMode;
+  const se = document.getElementById('opt-show-example');
+  if (se) se.checked = optsSettings.showExample ?? true;
 }
 
 function updateVolDisplay(val) {
@@ -2193,6 +2796,16 @@ function updateVolDisplay(val) {
 }
 function updateRateDisplay(val) {
   document.getElementById('rate-display').textContent = (val / 100).toFixed(2) + '×';
+}
+function resetVolume() {
+  document.getElementById('opt-tts-volume').value = 50;
+  updateVolDisplay(50);
+  saveOptsSettings();
+}
+function resetRate() {
+  document.getElementById('opt-tts-rate').value = 100;
+  updateRateDisplay(100);
+  saveOptsSettings();
 }
 
 function openOptsModal() {
@@ -2235,8 +2848,8 @@ const KB_STORAGE_KEY = 'jp_vocab_kb_v1';
 const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
                  (navigator.maxTouchPoints > 1 && !/Win/.test(navigator.platform));
 
-// keyBindings: { reveal: 'Space', carry: 'ArrowLeft', done: 'ArrowRight' }
-let keyBindings = { reveal: '', carry: '', done: '' };
+// keyBindings: { reveal: 'Space', carry: 'ArrowLeft', done: 'ArrowRight', tts: 't' }
+let keyBindings = { reveal: '', carry: '', done: '', tts: '' };
 let capturingFor = null; // which action is being captured
 
 function loadKbBindings() {
@@ -2266,7 +2879,7 @@ function closeKbModalOnOverlay(e) {
 }
 
 function syncKbModal() {
-  ['reveal','carry','done'].forEach(action => {
+  ['reveal','carry','done','tts'].forEach(action => {
     const btn = document.getElementById('kbcap-' + action);
     if (btn) btn.textContent = formatKey(keyBindings[action]) || '—';
   });
@@ -2277,6 +2890,12 @@ function formatKey(key) {
   const map = { ' ': 'Space', 'ArrowLeft': '←', 'ArrowRight': '→', 'ArrowUp': '↑', 'ArrowDown': '↓',
     'Enter': 'Enter', 'Backspace': '⌫', 'Escape': 'Esc', 'Tab': 'Tab' };
   return map[key] || (key.length === 1 ? key.toUpperCase() : key);
+}
+
+// 버튼 안에 넣을 키 뱃지 HTML (키 없으면 빈 문자열)
+function kbBadge(key) {
+  if (!key || isMobile) return '';
+  return ` <span class="btn-kb-badge" data-key="${formatKey(key)}"></span>`;
 }
 
 function startCapture(action) {
@@ -2334,43 +2953,117 @@ document.addEventListener('keydown', function(e) {
   const quizPage = document.getElementById('page-quiz');
   if (!quizPage || !quizPage.classList.contains('active')) return;
 
-  const { reveal: rk, carry: ck, done: dk } = keyBindings;
-  if (!rk && !ck && !dk) return;
+  const { reveal: rk, carry: ck, done: dk, tts: tk } = keyBindings;
+  if (!rk && !ck && !dk && !tk) return;
 
   if (rk && e.key === rk && !revealed) { e.preventDefault(); reveal(); return; }
   if (ck && e.key === ck && revealed)  { e.preventDefault(); markCarry(); return; }
   if (dk && e.key === dk && revealed)  { e.preventDefault(); markDone(); return; }
-  // also allow reveal key to advance after revealed (skip to next via done)
+  if (tk && e.key === tk) {
+    e.preventDefault();
+    const btn = document.getElementById('tts-btn-card') || document.createElement('button');
+    speakCurrentWord(btn);
+    return;
+  }
 });
 
 function updateKbHintBar() {
-  const bar = document.getElementById('kb-hint-bar');
-  if (!bar) return;
-  if (isMobile) { bar.style.display = 'none'; return; }
-
-  const hints = [];
-  if (keyBindings.reveal) hints.push({ label: '정답', key: keyBindings.reveal, color: 'var(--gold)' });
-  if (keyBindings.carry)  hints.push({ label: '이월', key: keyBindings.carry,  color: 'var(--red)' });
-  if (keyBindings.done)   hints.push({ label: '완료', key: keyBindings.done,   color: 'var(--green)' });
-
-  if (hints.length === 0) { bar.style.display = 'none'; return; }
-
-  bar.style.display = 'flex';
-  bar.innerHTML = hints.map((h, i) =>
-    `<span class="kb-hint-item">
-      <span class="kb-key">${formatKey(h.key)}</span>
-      <span style="color:${h.color};font-weight:600">${h.label}</span>
-    </span>${i < hints.length-1 ? '<span class="kb-hint-sep">|</span>' : ''}`
-  ).join('');
+  // 키보드 힌트 바 제거됨 — 키 뱃지는 버튼에 직접 표시
+  // 키 변경 시 퀴즈 버튼을 다시 그려야 하므로 renderQuiz 호출
+  const quizPage = document.getElementById('page-quiz');
+  if (quizPage && quizPage.classList.contains('active')) renderQuiz();
 }
 
 // Hide keyboard settings button on mobile — 옵션 버튼은 모바일에서도 표시 (TTS 설정 필요)
 
+// ── Font Size ──
+const FONT_SIZE_KEY = 'jp_vocab_fontsize_v1';
+const FONT_SIZES = [12, 13, 14, 15, 16, 18, 20, 22, 24];
+const FONT_DEFAULT_IDX = 4; // 16px
+let fontSizeIdx = FONT_DEFAULT_IDX;
+
+function applyFontSize() {
+  document.documentElement.style.fontSize = FONT_SIZES[fontSizeIdx] + 'px';
+  const btn = document.getElementById('font-size-reset-btn');
+  if (btn) btn.textContent = fontSizeIdx === FONT_DEFAULT_IDX ? 'A' : FONT_SIZES[fontSizeIdx] + 'px';
+}
+
+function adjustFontSize(dir) {
+  if (dir === 0) {
+    fontSizeIdx = FONT_DEFAULT_IDX;
+  } else {
+    fontSizeIdx = Math.max(0, Math.min(FONT_SIZES.length - 1, fontSizeIdx + dir));
+  }
+  localStorage.setItem(FONT_SIZE_KEY, fontSizeIdx);
+  applyFontSize();
+}
+
+function loadFontSize() {
+  const saved = localStorage.getItem(FONT_SIZE_KEY);
+  if (saved !== null) fontSizeIdx = parseInt(saved);
+  applyFontSize();
+}
+
+// ── Shuffle Mode ──
+function loadShuffleMode() {
+  const saved = localStorage.getItem(SHUFFLE_KEY);
+  if (saved !== null) shuffleMode = saved === 'true';
+  syncShuffleBtn();
+}
+
+function onShuffleToggle(checked) {
+  shuffleMode = checked;
+  localStorage.setItem(SHUFFLE_KEY, String(shuffleMode));
+  buildQueue();
+  renderQuiz();
+  showToast(shuffleMode ? '🔀 셔플 ON' : '📋 순서대로 출제');
+}
+
+function toggleShuffleMode() {
+  shuffleMode = !shuffleMode;
+  localStorage.setItem(SHUFFLE_KEY, String(shuffleMode));
+  syncShuffleBtn();
+  buildQueue();
+  renderQuiz();
+  showToast(shuffleMode ? '🔀 셔플 ON' : '📋 순서대로 출제');
+}
+
+function syncShuffleBtn() {
+  const cb = document.getElementById('opt-shuffle');
+  if (cb) cb.checked = shuffleMode;
+}
+
+// ── Dropdown Toggle ──
+function toggleDropdown(id) {
+  const menu = document.getElementById(id);
+  if (!menu) return;
+  const isOpen = menu.classList.contains('open');
+  // Close all dropdowns
+  document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
+  if (!isOpen) menu.classList.add('open');
+}
+
+function closeDropdown(id) {
+  const menu = document.getElementById(id);
+  if (menu) menu.classList.remove('open');
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.dropdown-wrap')) {
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
+  }
+});
+
 // ── Async Init ──
 (async function init() {
+  loadFontSize();
   await load();
   loadOptsSettings();
   loadKbBindings();
+  loadShuffleMode();
+  loadPageSize();
+  loadSortAndFilter();
   buildQueue();
   renderQuiz();
   renderEditTable();
