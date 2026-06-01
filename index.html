@@ -2424,6 +2424,8 @@ function createBackup(label) {
       furigana: w.furigana,
       meaning: w.meaning,
       type: w.type,
+      exampleJp: w.exampleJp || '',
+      exampleKr: w.exampleKr || '',
       carryCount: carryCount[w.id] || 0,
       isCarry: carrySet.has(w.id) ? 'Y' : '',
     }))
@@ -2444,11 +2446,13 @@ function downloadBackup(id) {
     '후리가나': w.furigana,
     '뜻': w.meaning,
     '품사': w.type,
+    '예문(일본어)': w.exampleJp || '',
+    '예문(한국어)': w.exampleKr || '',
     '이월횟수': w.carryCount,
     '이월중': w.isCarry,
   })));
   ws['!cols'] = [
-    { wch: 8 }, { wch: 16 }, { wch: 16 }, { wch: 28 }, { wch: 10 }, { wch: 10 }, { wch: 8 }
+    { wch: 8 }, { wch: 16 }, { wch: 16 }, { wch: 28 }, { wch: 10 }, { wch: 40 }, { wch: 40 }, { wch: 10 }, { wch: 8 }
   ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '단어장');
@@ -2516,6 +2520,8 @@ function exportExcel() {
     '후리가나': w.furigana,
     '뜻': w.meaning,
     '품사': w.type,
+    '예문(일본어)': w.exampleJp || '',
+    '예문(한국어)': w.exampleKr || '',
     '이월횟수': carryCount[w.id] || 0,
     '이월중': carrySet.has(w.id) ? 'Y' : '',
   }));
@@ -2529,6 +2535,8 @@ function exportExcel() {
     { wch: 16 }, // 후리가나
     { wch: 28 }, // 뜻
     { wch: 10 }, // 품사
+    { wch: 40 }, // 예문(일본어)
+    { wch: 40 }, // 예문(한국어)
     { wch: 10 }, // 이월횟수
     { wch: 8 },  // 이월중
   ];
@@ -2564,10 +2572,12 @@ function importExcel(event) {
       }
 
       const newWords = rows.map(r => ({
-        kanji:    String(r['단어(한자)'] || '').trim(),
-        furigana: String(r['후리가나']   || '').trim(),
-        meaning:  String(r['뜻']         || '').trim(),
-        type:     String(r['품사']        || '명사').trim(),
+        kanji:      String(r['단어(한자)']  || '').trim(),
+        furigana:   String(r['후리가나']    || '').trim(),
+        meaning:    String(r['뜻']          || '').trim(),
+        type:       String(r['품사']         || '명사').trim(),
+        example_jp: String(r['예문(일본어)'] || '').trim(),
+        example_kr: String(r['예문(한국어)'] || '').trim(),
       }));
 
       // 커스텀 모달로 선택 받기
