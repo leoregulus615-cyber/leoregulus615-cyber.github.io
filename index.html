@@ -582,6 +582,7 @@
 <header>
   <h1>日本語 단어장<span>JAPANESE VOCABULARY</span></h1>
   <div style="display:flex;align-items:center;gap:8px">
+    <span id="sync-status" style="font-size:0.72rem;opacity:0.85;white-space:nowrap">⏳ 불러오는 중…</span>
     <button class="kb-settings-btn" onclick="openKbModal()" title="키보드 단축키 설정">⌨️</button>
     <div class="tab-bar">
       <button class="tab-btn active" onclick="switchTab('quiz', this)">📖 퀴즈</button>
@@ -683,16 +684,43 @@
 <div id="toast"></div>
 
 <script>
-// ── Default Data ──
+// ══════════════════════════════════════════════════════
+// ⚙️  SUPABASE 설정 — 여기만 수정하면 됩니다
+// ══════════════════════════════════════════════════════
+const SUPABASE_URL  = 'https://vhwpbjcsghlurxwllwds.supabase.co/rest/v1/';
+const SUPABASE_KEY  = 'sb_publishable_sTcJZ0tMIAaFJXeabxMR5Q_bqx1VKUJ';
+// ══════════════════════════════════════════════════════
+
+// ── Supabase REST 헬퍼 ──
+async function sbFetch(path, options = {}) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    ...options,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': options.prefer || 'return=representation',
+      ...(options.headers || {})
+    }
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+// ── Default Data (Supabase가 비어있을 때만 사용) ──
 const DEFAULT_WORDS = [
-  { id:1, kanji:'食べる', furigana:'たべる', meaning:'먹다', type:'동사' },
-  { id:2, kanji:'飲む', furigana:'のむ', meaning:'마시다', type:'동사' },
-  { id:3, kanji:'学校', furigana:'がっこう', meaning:'학교', type:'명사' },
-  { id:4, kanji:'先生', furigana:'せんせい', meaning:'선생님', type:'명사' },
-  { id:5, kanji:'美しい', furigana:'うつくしい', meaning:'아름답다', type:'형용사' },
-  { id:6, kanji:'分かる', furigana:'わかる', meaning:'이해하다, 알다', type:'동사' },
-  { id:7, kanji:'友達', furigana:'ともだち', meaning:'친구', type:'명사' },
-  { id:8, kanji:'電車', furigana:'でんしゃ', meaning:'전철', type:'명사' },
+  { kanji:'食べる', furigana:'たべる', meaning:'먹다', type:'동사' },
+  { kanji:'飲む', furigana:'のむ', meaning:'마시다', type:'동사' },
+  { kanji:'学校', furigana:'がっこう', meaning:'학교', type:'명사' },
+  { kanji:'先生', furigana:'せんせい', meaning:'선생님', type:'명사' },
+  { kanji:'美しい', furigana:'うつくしい', meaning:'아름답다', type:'형용사' },
+  { kanji:'分かる', furigana:'わかる', meaning:'이해하다, 알다', type:'동사' },
+  { kanji:'友達', furigana:'ともだち', meaning:'친구', type:'명사' },
+  { kanji:'電車', furigana:'でんしゃ', meaning:'전철', type:'명사' },
 ];
 
 // ── State ──
@@ -700,49 +728,107 @@ let words = [];
 let quizQueue = [];
 let carrySet = new Set();
 let doneSet = new Set();
-let carryHistory = new Set(); // 한 번이라도 이월된 단어 ID
-let carryCount = {};          // 단어별 이월 횟수 { id: count }
-let carryOnlyMode = false;    // 이월 단어만 복습 모드
-let repeatAllMode = false;    // 전체 단어 반복 모드
-let carryThresholdMode = false; // N회 이상 이월 단어 복습 모드
-let carryThreshold = 2;       // 이월 횟수 기준값
+let carryHistory = new Set();
+let carryCount = {};
+let carryOnlyMode = false;
+let repeatAllMode = false;
+let carryThresholdMode = false;
+let carryThreshold = 2;
 let currentIdx = 0;
 let revealed = false;
-let roundDone = false; // 이월 모드에서 한 바퀴 완료 여부
+let roundDone = false;
 let nextId = 100;
 
-let checkboxMode = false;    // 수정 탭 일괄 선택 모드
-let selectedIds = new Set(); // 선택된 단어 ID
+let checkboxMode = false;
+let selectedIds = new Set();
 
 const STORAGE_KEY = 'jp_vocab_v1';
 
-function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    words,
+// ── 동기 저장 (quiz 진행상황 — 빠른 UX를 위해 localStorage 유지) ──
+function saveProgress() {
+  localStorage.setItem(STORAGE_KEY + '_progress', JSON.stringify({
     carrySet: [...carrySet],
     doneSet: [...doneSet],
     carryHistory: [...carryHistory],
     carryCount
   }));
 }
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY + '_progress');
+    if (raw) {
+      const d = JSON.parse(raw);
+      carrySet     = new Set(d.carrySet || []);
+      doneSet      = new Set(d.doneSet || []);
+      carryHistory = new Set(d.carryHistory || []);
+      carryCount   = d.carryCount || {};
+    }
+  } catch(e) {}
+}
 
-function load() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw) {
-    const d = JSON.parse(raw);
-    words = d.words || DEFAULT_WORDS;
-    carrySet = new Set(d.carrySet || []);
-    doneSet = new Set(d.doneSet || []);
-    carryHistory = new Set(d.carryHistory || []);
-    carryCount = d.carryCount || {};
-  } else {
-    words = JSON.parse(JSON.stringify(DEFAULT_WORDS));
-    carrySet = new Set();
-    doneSet = new Set();
-    carryHistory = new Set();
-    carryCount = {};
+// ── save() : 단어 변경 시 Supabase에 반영 + progress 저장 ──
+// (단어 CRUD는 각 함수에서 직접 API 호출하므로 save()는 progress만 저장)
+function save() {
+  saveProgress();
+}
+
+// ── load() : Supabase에서 단어 불러오기 ──
+async function load() {
+  showSyncStatus('loading');
+  try {
+    let rows = await sbFetch('vocab_words?order=id.asc');
+    if (!rows || rows.length === 0) {
+      // 처음 실행 — 기본 데이터 삽입
+      rows = await sbFetch('vocab_words', {
+        method: 'POST',
+        prefer: 'return=representation',
+        body: JSON.stringify(DEFAULT_WORDS)
+      });
+      showToast('기본 단어 8개를 Supabase에 저장했습니다');
+    }
+    words = rows.map(r => ({
+      id:       r.id,
+      kanji:    r.kanji,
+      furigana: r.furigana,
+      meaning:  r.meaning,
+      type:     r.type || '명사'
+    }));
+    nextId = words.reduce((m,w) => Math.max(m, w.id), 0) + 1;
+    loadProgress();
+    showSyncStatus('ok');
+  } catch(e) {
+    showSyncStatus('error', e.message);
+    // 오프라인 폴백 — localStorage 사용
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      words = d.words || DEFAULT_WORDS;
+    } else {
+      words = JSON.parse(JSON.stringify(DEFAULT_WORDS));
+    }
+    loadProgress();
+    nextId = words.reduce((m,w) => Math.max(m, w.id), 0) + 1;
   }
-  nextId = words.reduce((m,w) => Math.max(m, w.id), 0) + 1;
+}
+
+// ── 동기 상태 표시 ──
+function showSyncStatus(state, msg) {
+  let el = document.getElementById('sync-status');
+  if (!el) return;
+  if (state === 'loading') {
+    el.textContent = '⏳ 불러오는 중…';
+    el.style.color = 'var(--gold)';
+  } else if (state === 'ok') {
+    el.textContent = '☁️ 동기화됨';
+    el.style.color = 'var(--green)';
+  } else if (state === 'saving') {
+    el.textContent = '💾 저장 중…';
+    el.style.color = 'var(--blue)';
+  } else if (state === 'error') {
+    el.textContent = '⚠️ 오프라인 모드';
+    el.style.color = 'var(--red)';
+    console.warn('Supabase 오류:', msg);
+  }
 }
 
 // ── Tab Switching ──
@@ -1099,27 +1185,68 @@ function editRow(id) {
   document.getElementById('e-kanji-' + id).focus();
 }
 
-function saveRow(id) {
+async function saveRow(id) {
   const w = words.find(x => x.id === id);
   if (!w) return;
-  w.kanji = document.getElementById('e-kanji-' + id).value.trim();
-  w.furigana = document.getElementById('e-furi-' + id).value.trim();
-  w.meaning = document.getElementById('e-mean-' + id).value.trim();
-  w.type = document.getElementById('e-type-' + id).value;
-  if (!w.kanji) { showToast('단어를 입력해 주세요'); return; }
-  save();
+  const kanji    = document.getElementById('e-kanji-' + id).value.trim();
+  const furigana = document.getElementById('e-furi-' + id).value.trim();
+  const meaning  = document.getElementById('e-mean-' + id).value.trim();
+  const type     = document.getElementById('e-type-' + id).value;
+  if (!kanji) { showToast('단어를 입력해 주세요'); return; }
+
+  // 낙관적 UI 업데이트
+  w.kanji = kanji; w.furigana = furigana; w.meaning = meaning; w.type = type;
   renderEditTable();
-  showToast('저장되었습니다');
+  showSyncStatus('saving');
+
+  try {
+    if (w._new) {
+      // 신규 단어 → INSERT
+      const [row] = await sbFetch('vocab_words', {
+        method: 'POST',
+        prefer: 'return=representation',
+        body: JSON.stringify({ kanji, furigana, meaning, type })
+      });
+      // 서버 발급 id로 교체
+      const oldId = w.id;
+      w.id = row.id;
+      delete w._new;
+      if (carrySet.has(oldId))     { carrySet.delete(oldId);     carrySet.add(row.id); }
+      if (doneSet.has(oldId))      { doneSet.delete(oldId);      doneSet.add(row.id); }
+      if (carryHistory.has(oldId)) { carryHistory.delete(oldId); carryHistory.add(row.id); }
+      if (carryCount[oldId])       { carryCount[row.id] = carryCount[oldId]; delete carryCount[oldId]; }
+      nextId = Math.max(nextId, row.id + 1);
+    } else {
+      // 기존 단어 → PATCH
+      await sbFetch(`vocab_words?id=eq.${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ kanji, furigana, meaning, type })
+      });
+    }
+    save();
+    renderEditTable();
+    showSyncStatus('ok');
+    showToast('저장되었습니다');
+  } catch(e) {
+    showSyncStatus('error', e.message);
+    showToast('저장 실패 (오프라인 모드)');
+  }
 }
 
-function deleteRow(id) {
+async function deleteRow(id) {
   if (!confirm('이 단어를 삭제할까요?')) return;
   words = words.filter(w => w.id !== id);
-  carrySet.delete(id);
-  doneSet.delete(id);
+  carrySet.delete(id); doneSet.delete(id);
   save();
   renderEditTable();
   showToast('삭제되었습니다');
+  showSyncStatus('saving');
+  try {
+    await sbFetch(`vocab_words?id=eq.${id}`, { method: 'DELETE', prefer: '' });
+    showSyncStatus('ok');
+  } catch(e) {
+    showSyncStatus('error', e.message);
+  }
 }
 
 // ── Excel Export / Import ──
@@ -1158,7 +1285,7 @@ function importExcel(event) {
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = async function(e) {
     try {
       const wb = XLSX.read(e.target.result, { type: 'array' });
       const ws = wb.Sheets[wb.SheetNames[0]];
@@ -1166,7 +1293,6 @@ function importExcel(event) {
 
       if (rows.length === 0) { showToast('데이터가 없습니다'); return; }
 
-      // 필수 컬럼 확인
       const first = rows[0];
       const hasKanji = '단어(한자)' in first;
       const hasFuri  = '후리가나' in first;
@@ -1176,57 +1302,55 @@ function importExcel(event) {
         return;
       }
 
-      if (!confirm(`${rows.length}개 단어를 가져옵니다.\n현재 단어장을 덮어씁니까?\n\n[확인] 전체 교체  /  [취소] 추가`)) {
-        // 취소 → 추가 모드
-        rows.forEach(r => {
-          const id = nextId++;
-          words.push({
-            id,
-            kanji:    String(r['단어(한자)'] || '').trim(),
-            furigana: String(r['후리가나']   || '').trim(),
-            meaning:  String(r['뜻']         || '').trim(),
-            type:     String(r['품사']        || '명사').trim(),
-          });
-        });
-        showToast(`${rows.length}개 단어를 추가했습니다`);
-      } else {
-        // 확인 → 교체 모드
+      const newWords = rows.map(r => ({
+        kanji:    String(r['단어(한자)'] || '').trim(),
+        furigana: String(r['후리가나']   || '').trim(),
+        meaning:  String(r['뜻']         || '').trim(),
+        type:     String(r['품사']        || '명사').trim(),
+      }));
+
+      const replace = confirm(`${rows.length}개 단어를 가져옵니다.\n현재 단어장을 덮어씁니까?\n\n[확인] 전체 교체  /  [취소] 추가`);
+
+      showSyncStatus('saving');
+      if (replace) {
+        // 전체 교체: 기존 삭제 후 INSERT
+        await sbFetch('vocab_words?id=gte.0', { method: 'DELETE', prefer: '' });
         carrySet.clear(); doneSet.clear(); carryHistory.clear(); carryCount = {};
-        words = rows.map(r => {
-          const id = r['ID'] ? Number(r['ID']) : nextId++;
-          return {
-            id,
-            kanji:    String(r['단어(한자)'] || '').trim(),
-            furigana: String(r['후리가나']   || '').trim(),
-            meaning:  String(r['뜻']         || '').trim(),
-            type:     String(r['품사']        || '명사').trim(),
-          };
-        });
-        nextId = words.reduce((m, w) => Math.max(m, w.id), 0) + 1;
-        showToast(`${rows.length}개 단어로 교체했습니다`);
       }
 
+      const inserted = await sbFetch('vocab_words', {
+        method: 'POST',
+        prefer: 'return=representation',
+        body: JSON.stringify(newWords)
+      });
+
+      if (replace) {
+        words = inserted.map(r => ({ id:r.id, kanji:r.kanji, furigana:r.furigana, meaning:r.meaning, type:r.type||'명사' }));
+      } else {
+        words.push(...inserted.map(r => ({ id:r.id, kanji:r.kanji, furigana:r.furigana, meaning:r.meaning, type:r.type||'명사' })));
+      }
+      nextId = words.reduce((m,w) => Math.max(m, w.id), 0) + 1;
       save();
       renderEditTable();
       buildQueue();
+      showSyncStatus('ok');
+      showToast(`${inserted.length}개 단어를 ${replace ? '교체' : '추가'}했습니다`);
     } catch(err) {
-      showToast('파일 읽기 실패: ' + err.message);
+      showSyncStatus('error', err.message);
+      showToast('가져오기 실패: ' + err.message);
     }
   };
   reader.readAsArrayBuffer(file);
-
-  // 같은 파일 재선택 가능하도록 초기화
   event.target.value = '';
 }
 
 function addRow() {
-  const id = nextId++;
-  words.push({ id, kanji: '', furigana: '', meaning: '', type: '명사' });
+  // 임시 음수 ID로 신규 행 생성 (saveRow에서 실제 DB id로 교체됨)
+  const id = -(nextId++);
+  words.push({ id, kanji: '', furigana: '', meaning: '', type: '명사', _new: true });
   save();
   renderEditTable();
-  // Start editing immediately
   editRow(id);
-  // Scroll to bottom
   setTimeout(() => {
     const row = document.getElementById('row-' + id);
     if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1294,15 +1418,23 @@ function updateSelectedCountLabel() {
   if (el) el.textContent = `${selectedIds.size}개 선택됨`;
 }
 
-function deleteSelected() {
+async function deleteSelected() {
   if (selectedIds.size === 0) { showToast('선택된 단어가 없습니다'); return; }
   if (!confirm(`선택한 ${selectedIds.size}개 단어를 삭제할까요?`)) return;
+  const ids = [...selectedIds];
   words = words.filter(w => !selectedIds.has(w.id));
   selectedIds.forEach(id => { carrySet.delete(id); doneSet.delete(id); });
   selectedIds.clear();
   save();
   renderEditTable();
   showToast('선택 단어 삭제 완료');
+  showSyncStatus('saving');
+  try {
+    await sbFetch(`vocab_words?id=in.(${ids.join(',')})`, { method: 'DELETE', prefer: '' });
+    showSyncStatus('ok');
+  } catch(e) {
+    showSyncStatus('error', e.message);
+  }
 }
 
 function markCarrySelected() {
@@ -1484,12 +1616,15 @@ if (isMobile) {
   });
 }
 
-// ── Init ──
-load();
-loadKbBindings();
-buildQueue();
-renderQuiz();
-updateKbHintBar();
+// ── Async Init ──
+(async function init() {
+  await load();
+  loadKbBindings();
+  buildQueue();
+  renderQuiz();
+  renderEditTable();
+  updateKbHintBar();
+})();
 </script>
 </body>
 </html>
