@@ -582,6 +582,142 @@
   }
   .kb-hint-sep { color: var(--border); }
 
+  /* ── Options Modal ── */
+  .opts-modal {
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    width: min(480px, 95vw);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+  }
+  .opts-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px 0;
+  }
+  .opts-header h2 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1.1rem;
+    color: var(--ink);
+  }
+  .opts-tabs {
+    display: flex;
+    gap: 0;
+    padding: 14px 22px 0;
+    border-bottom: 2px solid var(--paper2);
+    margin-top: 10px;
+  }
+  .opts-tab {
+    padding: 7px 16px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: 'Noto Sans KR', sans-serif;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #999;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .opts-tab:hover { color: var(--ink); }
+  .opts-tab.active { color: var(--ink); border-bottom-color: var(--ink); }
+  .opts-body {
+    padding: 20px 22px 22px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .opts-panel { display: none; }
+  .opts-panel.active { display: block; }
+
+  /* TTS panel */
+  .opts-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--paper2);
+    gap: 14px;
+  }
+  .opts-row:last-child { border-bottom: none; }
+  .opts-row-label { font-size: 0.88rem; font-weight: 600; flex: 1; }
+  .opts-row-sub { font-size: 0.74rem; color: #999; margin-top: 2px; font-weight: 400; }
+
+  /* toggle switch */
+  .toggle-wrap { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+  .toggle-wrap input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .toggle-track {
+    position: absolute; inset: 0;
+    background: #ccc;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: white;
+    top: 3px; left: 3px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle-wrap input:checked + .toggle-track { background: var(--green); }
+  .toggle-wrap input:checked + .toggle-track::after { transform: translateX(20px); }
+
+  /* volume slider */
+  .vol-row { display: flex; align-items: center; gap: 10px; }
+  .vol-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--paper2);
+    outline: none;
+    cursor: pointer;
+    border: 1px solid var(--border);
+  }
+  .vol-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--ink);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  }
+  .vol-slider::-moz-range-thumb {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--ink);
+    cursor: pointer;
+    border: 2px solid white;
+  }
+  .vol-val {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ink);
+    min-width: 36px;
+    text-align: right;
+  }
+  .opts-section-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #aaa;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    margin-top: 2px;
+  }
+
   /* ── Backup Modal ── */
   .backup-list {
     max-height: 300px;
@@ -703,6 +839,50 @@
   .ic-btn-text { display: flex; flex-direction: column; gap: 1px; }
   .ic-btn-title { font-size: 0.88rem; font-weight: 600; }
   .ic-btn-sub { font-size: 0.73rem; opacity: 0.8; font-weight: 400; }
+
+  /* ── TTS Button ── */
+  .btn-tts {
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.15rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.18s;
+    color: var(--ink);
+    flex-shrink: 0;
+  }
+  .btn-tts:hover { background: var(--blue-soft); border-color: var(--blue); }
+  .btn-tts.speaking {
+    background: var(--blue-soft);
+    border-color: var(--blue);
+    animation: tts-pulse 0.7s infinite alternate;
+  }
+  @keyframes tts-pulse {
+    from { box-shadow: 0 0 0 0 rgba(44,79,122,0.3); }
+    to   { box-shadow: 0 0 0 6px rgba(44,79,122,0); }
+  }
+  .card-tts-wrap {
+    position: absolute;
+    bottom: 14px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tts-no-support {
+    font-size: 0.72rem;
+    color: #bbb;
+    text-align: center;
+    margin-top: 4px;
+  }
+  .icon-btn.tts-btn { color: var(--blue); border-color: var(--blue-soft); }
+  .icon-btn.tts-btn:hover { background: var(--blue-soft); border-color: var(--blue); }
+  .icon-btn.tts-btn.speaking { background: var(--blue-soft); border-color: var(--blue); animation: tts-pulse 0.7s infinite alternate; }
 </style>
 </head>
 <body>
@@ -711,7 +891,7 @@
   <h1>日本語 단어장<span>JAPANESE VOCABULARY</span></h1>
   <div style="display:flex;align-items:center;gap:8px">
     <span id="sync-status" style="font-size:0.72rem;opacity:0.85;white-space:nowrap">⏳ 불러오는 중…</span>
-    <button class="kb-settings-btn" onclick="openKbModal()" title="키보드 단축키 설정">⌨️</button>
+    <button class="kb-settings-btn" onclick="openOptsModal()" title="옵션">⚙️ 옵션</button>
     <div class="tab-bar">
       <button class="tab-btn active" onclick="switchTab('quiz', this)">📖 퀴즈</button>
       <button class="tab-btn" onclick="switchTab('edit', this)">✏️ 수정</button>
@@ -719,27 +899,97 @@
   </div>
 </header>
 
-<!-- ── Keyboard Settings Modal ── -->
-<div class="modal-overlay" id="kb-modal" onclick="closeKbModalOnOverlay(event)">
-  <div class="modal">
-    <button class="modal-close" onclick="closeKbModal()">✕</button>
-    <h2>⌨️ 키보드 단축키</h2>
-    <p class="modal-desc">퀴즈 모드에서 사용할 키를 설정하세요.<br>버튼을 클릭한 후 원하는 키를 누르면 등록됩니다.</p>
+<!-- ── Options Modal ── -->
+<div class="modal-overlay" id="opts-modal" onclick="closeOptsModalOnOverlay(event)">
+  <div class="opts-modal">
+    <div class="opts-header">
+      <h2>⚙️ 옵션</h2>
+      <button class="modal-close" onclick="closeOptsModal()" style="position:static;font-size:1.2rem;background:none;border:none;cursor:pointer;color:#888;padding:4px">✕</button>
+    </div>
+    <div class="opts-tabs">
+      <button class="opts-tab active" onclick="switchOptsTab('tts', this)">🔊 음성</button>
+      <button class="opts-tab" onclick="switchOptsTab('kb', this)">⌨️ 키보드</button>
+    </div>
+    <div class="opts-body">
 
-    <div class="kb-row">
-      <div class="kb-label"><span class="kb-badge reveal"></span>👁 정답 보기</div>
-      <button class="kb-capture-btn" id="kbcap-reveal" onclick="startCapture('reveal')">—</button>
-      <button class="kb-clear-btn" onclick="clearKey('reveal')" title="해제">✕</button>
-    </div>
-    <div class="kb-row">
-      <div class="kb-label"><span class="kb-badge carry"></span>↩ 이월</div>
-      <button class="kb-capture-btn" id="kbcap-carry" onclick="startCapture('carry')">—</button>
-      <button class="kb-clear-btn" onclick="clearKey('carry')" title="해제">✕</button>
-    </div>
-    <div class="kb-row">
-      <div class="kb-label"><span class="kb-badge done"></span>✓ 완료</div>
-      <button class="kb-capture-btn" id="kbcap-done" onclick="startCapture('done')">—</button>
-      <button class="kb-clear-btn" onclick="clearKey('done')" title="해제">✕</button>
+      <!-- TTS Panel -->
+      <div class="opts-panel active" id="opts-panel-tts">
+        <div class="opts-section-title">TTS 설정</div>
+
+        <div class="opts-row">
+          <div>
+            <div class="opts-row-label">카드 클릭 시 자동 발음</div>
+            <div class="opts-row-sub">단어 카드를 탭/클릭하면 바로 발음이 재생됩니다</div>
+          </div>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="opt-tts-autoplay" onchange="saveOptsSettings()">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+
+        <div class="opts-row">
+          <div>
+            <div class="opts-row-label">정답 공개 시 자동 발음</div>
+            <div class="opts-row-sub">👁 정답 보기 버튼을 누를 때 자동으로 발음합니다</div>
+          </div>
+          <label class="toggle-wrap">
+            <input type="checkbox" id="opt-tts-autoreveal" onchange="saveOptsSettings()">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+
+        <div class="opts-row">
+          <div style="flex:1">
+            <div class="opts-row-label">볼륨</div>
+            <div class="opts-row-sub" style="margin-bottom:10px">TTS 재생 볼륨을 조절합니다</div>
+            <div class="vol-row">
+              <span style="font-size:0.9rem">🔈</span>
+              <input type="range" class="vol-slider" id="opt-tts-volume"
+                min="0" max="100" value="100"
+                oninput="updateVolDisplay(this.value)" onchange="saveOptsSettings()">
+              <span class="vol-val" id="vol-display">100%</span>
+              <span style="font-size:0.9rem">🔊</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="opts-row">
+          <div>
+            <div class="opts-row-label">재생 속도</div>
+            <div class="opts-row-sub" style="margin-bottom:10px">발음 재생 빠르기를 조절합니다</div>
+            <div class="vol-row">
+              <span style="font-size:0.8rem;color:#999">느림</span>
+              <input type="range" class="vol-slider" id="opt-tts-rate"
+                min="50" max="150" value="85"
+                oninput="updateRateDisplay(this.value)" onchange="saveOptsSettings()">
+              <span class="vol-val" id="rate-display">0.85×</span>
+              <span style="font-size:0.8rem;color:#999">빠름</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Keyboard Panel -->
+      <div class="opts-panel" id="opts-panel-kb">
+        <div class="opts-section-title" id="kb-mobile-notice" style="display:none;color:var(--red)">모바일 환경에서는 키보드 단축키를 사용할 수 없습니다</div>
+        <p class="modal-desc" style="margin-bottom:16px">퀴즈 모드에서 사용할 키를 설정하세요.<br>버튼을 클릭한 후 원하는 키를 누르면 등록됩니다.</p>
+        <div class="kb-row">
+          <div class="kb-label"><span class="kb-badge reveal"></span>👁 정답 보기</div>
+          <button class="kb-capture-btn" id="kbcap-reveal" onclick="startCapture('reveal')">—</button>
+          <button class="kb-clear-btn" onclick="clearKey('reveal')" title="해제">✕</button>
+        </div>
+        <div class="kb-row">
+          <div class="kb-label"><span class="kb-badge carry"></span>↩ 이월</div>
+          <button class="kb-capture-btn" id="kbcap-carry" onclick="startCapture('carry')">—</button>
+          <button class="kb-clear-btn" onclick="clearKey('carry')" title="해제">✕</button>
+        </div>
+        <div class="kb-row">
+          <div class="kb-label"><span class="kb-badge done"></span>✓ 완료</div>
+          <button class="kb-capture-btn" id="kbcap-done" onclick="startCapture('done')">—</button>
+          <button class="kb-clear-btn" onclick="clearKey('done')" title="해제">✕</button>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1167,18 +1417,22 @@ function renderQuiz() {
 
   area.innerHTML = bannerHtml + `
     <div class="card-wrapper">
-      <div class="card" id="quiz-card">
+      <div class="card" id="quiz-card" onclick="onCardClick()" style="cursor:pointer">
         ${typeBadge}
         ${carryIndicator}
         <div class="kanji">${w.kanji}</div>
         <div class="furigana" id="furi">${w.furigana}</div>
         <div class="meaning" id="mean">${w.meaning}</div>
+        <div class="card-tts-wrap">
+          <button class="btn-tts" id="tts-btn-card" onclick="speakCurrentWord(this)" title="발음 듣기">🔊</button>
+        </div>
       </div>
     </div>
     <div class="btn-row" id="btn-row">
       <button class="btn btn-reveal" onclick="reveal()">👁 정답 보기</button>
     </div>
   `;
+  window._ttsText = w.furigana || w.kanji;
 }
 
 function reveal() {
@@ -1190,6 +1444,12 @@ function reveal() {
     <button class="btn btn-carry" onclick="markCarry()">↩ 이월</button>
     <button class="btn btn-done" onclick="markDone()">✓ 완료</button>
   `;
+
+  // 정답 공개 시 자동 발음
+  if (optsSettings.ttsAutoReveal) {
+    const btn = document.getElementById('tts-btn-card');
+    if (btn) speakCurrentWord(btn);
+  }
 }
 
 function markCarry() {
@@ -1319,6 +1579,7 @@ function renderEditTable() {
     const actionCell = checkboxMode
       ? `<td class="actions-cell" style="color:#bbb;font-size:0.75rem">—</td>`
       : `<td class="actions-cell">
+          <button class="icon-btn tts-btn" onclick="speakWord(this, ${JSON.stringify(w.furigana || w.kanji)})" title="발음 듣기">🔊</button>
           <button class="icon-btn edit-btn" onclick="editRow(${w.id})" title="수정">✏️</button>
           <button class="icon-btn del-btn" onclick="deleteRow(${w.id})" title="삭제">🗑️</button>
         </td>`;
@@ -1433,6 +1694,113 @@ async function deleteRow(id) {
   } catch(e) {
     showSyncStatus('error', e.message);
   }
+}
+
+// ── TTS (Text-to-Speech) ──
+let _ttsText = '';
+let _ttsAudio = null;        // Audio 객체 (Google TTS 경로)
+let _ttsSpeaking = false;
+let _ttsActiveBtn = null;
+
+// 현재 재생 중인 버튼 상태 초기화
+function _ttsReset() {
+  _ttsSpeaking = false;
+  if (_ttsActiveBtn) {
+    _ttsActiveBtn.classList.remove('speaking', 'was-speaking');
+    _ttsActiveBtn = null;
+  }
+}
+
+// 재생 중지
+function _ttsStop() {
+  if (_ttsAudio) { _ttsAudio.pause(); _ttsAudio = null; }
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  _ttsReset();
+}
+
+// ── 방법 1: Google Translate TTS (온라인 전용, 가장 자연스러운 발음) ──
+function _speakViaGoogle(text, onOk, onFail) {
+  const url = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=ja&client=tw-ob&q=' + encodeURIComponent(text);
+  const audio = new Audio(url);
+  audio.volume = (optsSettings.ttsVolume ?? 100) / 100;
+  audio.playbackRate = (optsSettings.ttsRate ?? 85) / 100;
+  audio.oncanplaythrough = () => { _ttsAudio = audio; audio.play().then(onOk).catch(onFail); };
+  audio.onerror = onFail;
+  audio.onended = () => _ttsReset();
+  // 3초 안에 로드 안 되면 fallback
+  setTimeout(() => { if (!_ttsAudio) onFail(); }, 3000);
+}
+
+// ── 방법 2: Web Speech API (오프라인/로컬 동작, 음성 팩 필요) ──
+let _wsVoices = [];
+if (window.speechSynthesis) {
+  const _syncVoices = () => { _wsVoices = speechSynthesis.getVoices(); };
+  _syncVoices();
+  speechSynthesis.onvoiceschanged = _syncVoices;
+}
+
+function _speakViaWebSpeech(text, onOk, onFail) {
+  if (!window.speechSynthesis) { onFail(); return; }
+  speechSynthesis.cancel();
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang   = 'ja-JP';
+  utter.rate   = (optsSettings.ttsRate ?? 85) / 100;
+  utter.volume = (optsSettings.ttsVolume ?? 100) / 100;
+  utter.pitch  = 1;
+
+  // 일본어 음성 우선, 없으면 기본 음성으로 시도
+  const jaVoice = _wsVoices.find(v => v.lang === 'ja-JP') || _wsVoices.find(v => v.lang.startsWith('ja'));
+  if (jaVoice) utter.voice = jaVoice;
+
+  let started = false;
+  utter.onstart = () => { started = true; onOk(); };
+  utter.onend   = () => _ttsReset();
+  utter.onerror = (e) => {
+    if (e.error === 'interrupted') { _ttsReset(); return; }
+    onFail();
+  };
+
+  speechSynthesis.speak(utter);
+  // Chrome file:// : speak 후 paused로 굳는 버그 대응
+  setTimeout(() => { if (speechSynthesis.paused) speechSynthesis.resume(); }, 80);
+  // 1.5초 내 onstart 없으면 실패로 판단
+  setTimeout(() => { if (!started) { speechSynthesis.cancel(); onFail(); } }, 1500);
+}
+
+// ── 메인 함수: Google → WebSpeech → 실패 안내 순으로 시도 ──
+function speakWord(btn, text) {
+  if (!text) return;
+
+  // 같은 버튼 다시 누르면 정지
+  if (_ttsSpeaking) {
+    _ttsStop();
+    if (btn === _ttsActiveBtn || btn.classList.contains('was-speaking')) return;
+  }
+  _ttsStop();
+
+  _ttsSpeaking  = true;
+  _ttsActiveBtn = btn;
+  btn.classList.add('speaking', 'was-speaking');
+
+  const onOk   = () => {}; // 애니메이션은 onend/_ttsReset에서 처리
+  const onFail = () => {
+    // Google 실패 → WebSpeech 시도
+    _speakViaWebSpeech(text,
+      onOk,
+      () => {
+        // 둘 다 실패
+        _ttsReset();
+        showToast('음성을 재생할 수 없습니다.\n일본어 음성 팩이 설치되어 있는지 확인하세요.');
+      }
+    );
+  };
+
+  _speakViaGoogle(text, onOk, onFail);
+}
+
+function speakCurrentWord(btn) {
+  speakWord(btn, _ttsText || '');
 }
 
 // ── Backup System ──
@@ -1791,6 +2159,81 @@ function showToast(msg) {
 }
 
 // ──────────────────────────────────────
+// OPTIONS MODAL
+// ──────────────────────────────────────
+const OPTS_KEY = 'jp_vocab_opts_v1';
+let optsSettings = {
+  ttsAutoplay:   false,   // 카드 클릭 시 자동 발음
+  ttsAutoReveal: false,   // 정답 공개 시 자동 발음
+  ttsVolume:     100,     // 0~100
+  ttsRate:       85,      // 50~150 (실제값 /100)
+};
+
+function loadOptsSettings() {
+  try {
+    const raw = localStorage.getItem(OPTS_KEY);
+    if (raw) optsSettings = { ...optsSettings, ...JSON.parse(raw) };
+  } catch(e) {}
+}
+
+function saveOptsSettings() {
+  optsSettings.ttsAutoplay   = document.getElementById('opt-tts-autoplay').checked;
+  optsSettings.ttsAutoReveal = document.getElementById('opt-tts-autoreveal').checked;
+  optsSettings.ttsVolume     = parseInt(document.getElementById('opt-tts-volume').value);
+  optsSettings.ttsRate       = parseInt(document.getElementById('opt-tts-rate').value);
+  localStorage.setItem(OPTS_KEY, JSON.stringify(optsSettings));
+}
+
+function syncOptsUI() {
+  document.getElementById('opt-tts-autoplay').checked   = optsSettings.ttsAutoplay;
+  document.getElementById('opt-tts-autoreveal').checked = optsSettings.ttsAutoReveal;
+  document.getElementById('opt-tts-volume').value       = optsSettings.ttsVolume;
+  document.getElementById('opt-tts-rate').value         = optsSettings.ttsRate;
+  updateVolDisplay(optsSettings.ttsVolume);
+  updateRateDisplay(optsSettings.ttsRate);
+}
+
+function updateVolDisplay(val) {
+  document.getElementById('vol-display').textContent = val + '%';
+}
+function updateRateDisplay(val) {
+  document.getElementById('rate-display').textContent = (val / 100).toFixed(2) + '×';
+}
+
+function openOptsModal() {
+  syncOptsUI();
+  // 모바일이면 KB 탭에 안내 표시
+  const notice = document.getElementById('kb-mobile-notice');
+  if (notice) notice.style.display = isMobile ? 'block' : 'none';
+  document.getElementById('opts-modal').classList.add('open');
+}
+
+function closeOptsModal() {
+  // 캡처 중이었으면 초기화
+  capturingFor = null;
+  document.querySelectorAll('.kb-capture-btn').forEach(b => b.classList.remove('listening'));
+  document.getElementById('opts-modal').classList.remove('open');
+}
+
+function closeOptsModalOnOverlay(e) {
+  if (e.target === document.getElementById('opts-modal')) closeOptsModal();
+}
+
+function switchOptsTab(tab, btn) {
+  document.querySelectorAll('.opts-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.opts-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('opts-panel-' + tab).classList.add('active');
+}
+
+// 카드 클릭 핸들러
+function onCardClick() {
+  if (!optsSettings.ttsAutoplay) return;
+  const btn = document.getElementById('tts-btn-card');
+  if (btn) speakCurrentWord(btn);
+}
+
+// ──────────────────────────────────────
 // KEYBOARD SHORTCUTS
 // ──────────────────────────────────────
 const KB_STORAGE_KEY = 'jp_vocab_kb_v1';
@@ -1813,20 +2256,18 @@ function saveKbBindings() {
 }
 
 function openKbModal() {
-  if (isMobile) return; // don't open on mobile (no physical keyboard)
-  capturingFor = null;
-  syncKbModal();
-  document.getElementById('kb-modal').classList.add('open');
+  // 옵션 모달에서 키보드 탭으로 열기
+  openOptsModal();
+  const kbTab = document.querySelector('.opts-tab:nth-child(2)');
+  if (kbTab) switchOptsTab('kb', kbTab);
 }
 
 function closeKbModal() {
-  capturingFor = null;
-  document.querySelectorAll('.kb-capture-btn').forEach(b => b.classList.remove('listening'));
-  document.getElementById('kb-modal').classList.remove('open');
+  closeOptsModal();
 }
 
 function closeKbModalOnOverlay(e) {
-  if (e.target === document.getElementById('kb-modal')) closeKbModal();
+  closeOptsModalOnOverlay(e);
 }
 
 function syncKbModal() {
@@ -1862,7 +2303,7 @@ function clearKey(action) {
 
 // Keyboard event listener — global
 document.addEventListener('keydown', function(e) {
-  const modal = document.getElementById('kb-modal');
+  const modal = document.getElementById('opts-modal');
   const modalOpen = modal && modal.classList.contains('open');
 
   // Ignore if typing in an input/select (edit tab)
@@ -1891,7 +2332,7 @@ document.addEventListener('keydown', function(e) {
   }
 
   // Close modal on Escape
-  if (modalOpen && e.key === 'Escape') { closeKbModal(); return; }
+  if (modalOpen && e.key === 'Escape') { closeOptsModal(); return; }
   if (modalOpen) return;
 
   // ── Quiz shortcut mode ──
@@ -1928,17 +2369,12 @@ function updateKbHintBar() {
   ).join('');
 }
 
-// Hide keyboard settings button on mobile
-if (isMobile) {
-  document.addEventListener('DOMContentLoaded', function() {
-    const btn = document.querySelector('.kb-settings-btn');
-    if (btn) btn.style.display = 'none';
-  });
-}
+// Hide keyboard settings button on mobile — 옵션 버튼은 모바일에서도 표시 (TTS 설정 필요)
 
 // ── Async Init ──
 (async function init() {
   await load();
+  loadOptsSettings();
   loadKbBindings();
   buildQueue();
   renderQuiz();
