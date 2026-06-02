@@ -6,7 +6,7 @@
 <title>日本語 단어장</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Noto+Sans+KR:wght@300;400;600&family=M+PLUS+1p:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js"></script>
+<script src="https://unpkg.com/kuromoji@0.1.2/build/kuromoji.js"></script>
 <style>
   :root {
     --ink: #1a2e2b;
@@ -2005,127 +2005,76 @@ function buildWordRubyHtml(kanji, furigana, show) {
   return `<ruby>${kanji}<rt${showCls}>${furigana}</rt></ruby>`;
 }
 
-// ── 후리가나 자동 생성 (kuromoji.js) ──
+// ── 후리가나 자동 생성 (kuromoji 직접) ──
 const _furiCache = {};
-let _kuromojiTokenizer = null;
-let _kuromojiReady = false;
-let _kuromojiLoading = false;
-let _kuromojiQueue = [];
-
-function _initKuromoji() {
-  if (_kuromojiReady || _kuromojiLoading) return;
-  _kuromojiLoading = true;
-  kuromoji.builder({ dicPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict' }).build((err, tokenizer) => {
-    if (err) { console.error('kuromoji 초기화 실패', err); return; }
-    _kuromojiTokenizer = tokenizer;
-    _kuromojiReady = true;
-    _kuromojiLoading = false;
-    _kuromojiQueue.forEach(fn => fn());
-    _kuromojiQueue = [];
-  });
-}
-
-function _katakanaToHiragana(str) {
-  return str.replace(/[\u30A1-\u30F6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
-}
+let _tokenizer = null;
+let _initPromise = null;
 
 function _hasKanji(str) {
   return /[\u4e00-\u9fff\u3400-\u4dbf]/.test(str);
 }
 
-function _buildRubyHtml(tokens) {
-  return tokens.map(t => {
-    const surface = t.surface_form;
-    if (!_hasKanji(surface)) return surface;
-    const reading = t.reading ? _katakanaToHiragana(t.reading) : null;
-    if (!reading || reading === surface) return surface;
+function _initKuroshiro() {
+  if (_initPromise) return _initPromise;
+  _initPromise = new Promise((resolve) => {
+    kuromoji.builder({ dicPath: 'https://unpkg.com/kuromoji@0.1.2/dict' })
+      .build((err, tokenizer) => {
+        if (!err) _tokenizer = tokenizer;
+        else console.error('kuromoji init error', err);
+        resolve();
+      });
+  });
+  return _initPromise;
+}
 
-    // 토큰 끝의 히라가나 접미부 분리
-    // 예) surface="捨てる" reading="すてる" → kanji="捨" suffix="てる" kReading="す"
-    const suffixMatch = surface.match(/^([一-鿿㐀-䶿々〆]+)([぀-ゟ゠-ヿ]*)$/);
-    if (suffixMatch) {
-      const kanjiPart  = suffixMatch[1];
-      const suffixPart = suffixMatch[2]; // 히라가나 접미부 (없을 수도 있음)
-      if (suffixPart && reading.endsWith(suffixPart)) {
-        const kanjiReading = reading.slice(0, reading.length - suffixPart.length);
-        return `<ruby>${kanjiPart}<rt>${kanjiReading}</rt></ruby>${suffixPart}`;
+function _kata2hira(str) {
+  return str.replace(/[\u30A1-\u30F6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+}
+
+function _buildRuby(text) {
+  if (_furiCache[text] !== undefined) return _furiCache[text];
+  if (!_tokenizer) { _furiCache[text] = null; return null; }
+  try {
+    const tokens = _tokenizer.tokenize(text);
+    const html = tokens.map(t => {
+      const s = t.surface_form;
+      if (!_hasKanji(s)) return s;
+      const r = t.reading ? _kata2hira(t.reading) : null;
+      if (!r || r === s) return s;
+      // 접미 히라가나 분리 (捨てる → 捨<rt>す</rt>てる)
+      const m = s.match(/^([\u4e00-\u9fff\u3400-\u4dbf\u3005]+)([\u3040-\u309f]*)$/);
+      if (m && m[2] && r.endsWith(m[2])) {
+        return `<ruby>${m[1]}<rt>${r.slice(0, r.length - m[2].length)}</rt></ruby>${m[2]}`;
       }
-    }
-
-    return `<ruby>${surface}<rt>${reading}</rt></ruby>`;
-  }).join('');
+      return `<ruby>${s}<rt>${r}</rt></ruby>`;
+    }).join('');
+    _furiCache[text] = html;
+    return html;
+  } catch(e) { return null; }
 }
 
-function addFuriganaToWordCard(kanji) {
-  const el = document.getElementById('quiz-kanji-el');
-  if (!el) return;
+async function addFuriganaToWordCard(kanji) {
   if (!_hasKanji(kanji)) return;
-
-  const cacheKey = '__word__' + kanji;
-  const apply = () => {
-    const currentEl = document.getElementById('quiz-kanji-el');
-    if (!currentEl) return;
-    try {
-      const tokens = _kuromojiTokenizer.tokenize(kanji);
-      const html = _buildRubyHtml(tokens);
-      // rt에 show 클래스 없이 생성된 html을 주입, reveal 시 show 추가
-      _furiCache[cacheKey] = html;
-      currentEl.innerHTML = html;
-      // reveal 이후 호출되므로 바로 show
-      currentEl.querySelectorAll('rt').forEach(rt => rt.classList.add('show'));
-    } catch(e) {}
-  };
-
-  if (_kuromojiReady) {
-    apply();
-  } else {
-    _kuromojiQueue.push(apply);
-    _initKuromoji();
-  }
+  await _initKuroshiro();
+  const html = _buildRuby(kanji);
+  const el = document.getElementById('quiz-kanji-el');
+  if (!el || !html) return;
+  el.innerHTML = html;
+  el.querySelectorAll('rt').forEach(rt => rt.classList.add('show'));
 }
 
-function addFuriganaToExample(exampleJp) {
-  const el = document.getElementById('example-jp-text');
-  if (!el) return;
+async function addFuriganaToExample(exampleJp) {
   if (!_hasKanji(exampleJp)) return;
-
-  if (_furiCache[exampleJp]) {
-    el.innerHTML = _furiCache[exampleJp];
-    el.querySelectorAll('rt').forEach(rt => rt.classList.add('show'));
-    return;
-  }
-
-  // 로딩 표시
-  const loading = document.createElement('span');
-  loading.className = 'furi-loading';
-  loading.textContent = '読み仮名…';
-  el.appendChild(loading);
-
-  const apply = () => {
-    const currentEl = document.getElementById('example-jp-text');
-    if (!currentEl) return;
-    try {
-      const tokens = _kuromojiTokenizer.tokenize(exampleJp);
-      const html = _buildRubyHtml(tokens);
-      _furiCache[exampleJp] = html;
-      currentEl.innerHTML = html;
-      currentEl.querySelectorAll('rt').forEach(rt => rt.classList.add('show'));
-    } catch(e) {
-      const sp = currentEl.querySelector('.furi-loading');
-      if (sp) sp.remove();
-    }
-  };
-
-  if (_kuromojiReady) {
-    apply();
-  } else {
-    _kuromojiQueue.push(apply);
-    _initKuromoji();
-  }
+  await _initKuroshiro();
+  const html = _buildRuby(exampleJp);
+  const el = document.getElementById('example-jp-text');
+  if (!el || !html) return;
+  el.innerHTML = html;
+  el.querySelectorAll('rt').forEach(rt => rt.classList.add('show'));
 }
 
-// 페이지 로드 시 미리 초기화
-_initKuromoji();
+// 페이지 로드 시 사전 선행 다운로드
+_initKuroshiro();
 
 function reveal() {
   const w = quizQueue[currentIdx];
