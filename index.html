@@ -2276,6 +2276,7 @@ function setCarryThreshold(val) {
 // ──────────────────────────────────────
 function renderEditTable() {
   const tbody = document.getElementById('tbody');
+  if (!tbody) return; // DOM 미준비 시 안전 종료
 
   // Update thead checkbox column
   const theadRow = document.getElementById('thead-row');
@@ -3445,24 +3446,19 @@ document.addEventListener('click', function(e) {
 
 // ── Async Init ──
 (async function init() {
-  try {
-    loadFontSize();
-    await load();          // 즉시 리턴 (non-blocking)
-    loadOptsSettings();
-    applyWordFont();
-    loadKbBindings();
-    loadShuffleMode();
-    loadPageSize();
-    loadSortAndFilter();
-    buildQueue();
-    renderQuiz();
-    renderEditTable();
-    updateKbHintBar();
-  } catch(e) {
-    console.error('init 에러:', e);
-    // 에러가 나도 최소한 화면은 띄움
-    try { buildQueue(); renderQuiz(); renderEditTable(); } catch(_) {}
-  }
+  loadFontSize();
+  loadLocal();           // 즉시 로컬 데이터 로드
+  loadOptsSettings();
+  applyWordFont();
+  loadKbBindings();
+  loadShuffleMode();
+  loadPageSize();
+  loadSortAndFilter();
+  buildQueue();
+  renderQuiz();
+  renderEditTable();
+  updateKbHintBar();
+  syncFromSupabase();    // 백그라운드 동기화 (await 없음)
 })();
 </script>
 </body>
