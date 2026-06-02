@@ -230,7 +230,7 @@
     width: 100%;
   }
   .btn-row .btn {
-    flex: 1;
+    width: 100%;
     justify-content: center;
     min-width: 0;
   }
@@ -449,7 +449,7 @@
   }
   .word-card.row-selected { background: #e8effa; border-color: #7a9fd4; }
   .word-card-check { flex-shrink: 0; }
-  .word-card-body { flex: 1; min-width: 0; }
+  .word-card-body { width: 100%; min-width: 0; }
   .word-card-kanji {
     font-family: 'Noto Serif JP', serif;
     font-size: 1.15rem;
@@ -656,7 +656,7 @@
     gap: 8px;
     font-size: 0.9rem;
     font-weight: 600;
-    flex: 1;
+    width: 100%;
   }
   .kb-badge {
     display: inline-block;
@@ -791,7 +791,7 @@
   .opts-body {
     padding: 20px 22px 22px;
     overflow-y: auto;
-    flex: 1;
+    width: 100%;
   }
   .opts-panel { display: none; }
   .opts-panel.active { display: block; }
@@ -806,7 +806,7 @@
     gap: 14px;
   }
   .opts-row:last-child { border-bottom: none; }
-  .opts-row-label { font-size: 0.88rem; font-weight: 600; flex: 1; }
+  .opts-row-label { font-size: 0.88rem; font-weight: 600; width: 100%; }
   .opts-row-sub { font-size: 0.74rem; color: #999; margin-top: 2px; font-weight: 400; }
 
   /* toggle switch */
@@ -833,11 +833,11 @@
   .toggle-wrap input:checked + .toggle-track::after { transform: translateX(20px); }
 
   /* volume slider */
-  .vol-row { display: flex; align-items: center; gap: 10px; }
+  .vol-row { display: grid; grid-template-columns: 2rem 1fr 3.2rem 2rem auto; align-items: center; gap: 10px; }
   .vol-slider {
     -webkit-appearance: none;
     appearance: none;
-    flex: 1;
+    width: 100%;
     height: 5px;
     border-radius: 3px;
     background: var(--paper2);
@@ -865,7 +865,7 @@
     font-size: 0.82rem;
     font-weight: 700;
     color: var(--ink);
-    min-width: 36px;
+    min-width: 42px;
     text-align: right;
   }
   .reset-val-btn {
@@ -909,7 +909,7 @@
   }
   .backup-item:last-child { border-bottom: none; }
   .backup-item:hover { background: #faf8f4; }
-  .backup-item-info { flex: 1; min-width: 0; }
+  .backup-item-info { width: 100%; min-width: 0; }
   .backup-item-name {
     font-size: 0.85rem;
     font-weight: 600;
@@ -1309,7 +1309,7 @@
             <div class="vol-row">
               <span style="font-size:0.8rem;color:#999">🔇</span>
               <input type="range" class="vol-slider" id="opt-tts-volume"
-                min="0" max="100" step="10" value="100"
+                min="0" max="100" step="5" value="100"
                 oninput="updateVolumeDisplay(this.value)" onchange="saveOptsSettings()">
               <span class="vol-val" id="volume-display">100%</span>
               <span style="font-size:0.8rem;color:#999">🔊</span>
