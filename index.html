@@ -1301,21 +1301,6 @@
           </label>
         </div>
 
-        <div class="opts-row">
-          <div style="flex:1">
-            <div class="opts-row-label">볼륨</div>
-            <div class="opts-row-sub" style="margin-bottom:10px">TTS 재생 볼륨을 조절합니다</div>
-            <div class="vol-row">
-              <span style="font-size:0.9rem">🔈</span>
-              <input type="range" class="vol-slider" id="opt-tts-volume"
-                min="0" max="100" step="5" value="100"
-                oninput="updateVolDisplay(this.value)" onchange="saveOptsSettings()">
-              <span class="vol-val" id="vol-display">100%</span>
-              <span style="font-size:0.9rem">🔊</span>
-              <button class="reset-val-btn" onclick="resetVolume()" title="100%로 초기화">↺</button>
-            </div>
-          </div>
-        </div>
 
         <div class="opts-row">
           <div>
@@ -2554,7 +2539,6 @@ function speakWord(btn, text) {
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'ja-JP';
   utter.rate = (optsSettings.ttsRate ?? 85) / 100;
-  utter.volume = (optsSettings.ttsVolume ?? 100) / 100;
   utter.pitch = 1;
 
   const jaVoice = _wsVoices.find(v => v.lang === 'ja-JP') || _wsVoices.find(v => v.lang.startsWith('ja'));
@@ -2587,7 +2571,6 @@ function speakWordThenExample() {
   const utter1 = new SpeechSynthesisUtterance(_ttsText);
   utter1.lang = 'ja-JP';
   utter1.rate = (optsSettings.ttsRate ?? 85) / 100;
-  utter1.volume = (optsSettings.ttsVolume ?? 100) / 100;
   if (jaVoice) utter1.voice = jaVoice;
   utter1.onend = () => {
     if (!_ttsExampleText) { _ttsReset(); return; }
@@ -2596,7 +2579,6 @@ function speakWordThenExample() {
       const utter2 = new SpeechSynthesisUtterance(_ttsExampleText);
       utter2.lang = 'ja-JP';
       utter2.rate = (optsSettings.ttsRate ?? 85) / 100;
-      utter2.volume = (optsSettings.ttsVolume ?? 100) / 100;
       if (jaVoice) utter2.voice = jaVoice;
       utter2.onend = () => _ttsReset();
       utter2.onerror = () => _ttsReset();
@@ -3030,7 +3012,6 @@ const OPTS_KEY = 'jp_vocab_opts_v1';
 let optsSettings = {
   ttsAutoplay:   false,   // 카드 클릭 시 자동 발음
   ttsAutoReveal: false,   // 정답 공개 시 자동 발음
-  ttsVolume:     100,     // 0~100, step 5
   ttsRate:       90,      // 50~150, step 10 (실제값 /100)
   showExample:   true,    // 퀴즈에서 예문 표시
   wordFont:      'serif', // 단어 카드 폰트: 'serif' | 'sans'
@@ -3046,7 +3027,6 @@ function loadOptsSettings() {
 function saveOptsSettings() {
   optsSettings.ttsAutoplay   = document.getElementById('opt-tts-autoplay').checked;
   optsSettings.ttsAutoReveal = document.getElementById('opt-tts-autoreveal').checked;
-  optsSettings.ttsVolume     = parseInt(document.getElementById('opt-tts-volume').value);
   optsSettings.ttsRate       = parseInt(document.getElementById('opt-tts-rate').value);
   optsSettings.showExample   = document.getElementById('opt-show-example')?.checked ?? true;
   localStorage.setItem(OPTS_KEY, JSON.stringify(optsSettings));
@@ -3058,9 +3038,7 @@ function saveOptsSettings() {
 function syncOptsUI() {
   document.getElementById('opt-tts-autoplay').checked   = optsSettings.ttsAutoplay;
   document.getElementById('opt-tts-autoreveal').checked = optsSettings.ttsAutoReveal;
-  document.getElementById('opt-tts-volume').value       = optsSettings.ttsVolume;
   document.getElementById('opt-tts-rate').value         = optsSettings.ttsRate;
-  updateVolDisplay(optsSettings.ttsVolume);
   updateRateDisplay(optsSettings.ttsRate);
   const cb = document.getElementById('opt-shuffle');
   if (cb) cb.checked = shuffleMode;
@@ -3099,16 +3077,8 @@ function syncWordFontButtons() {
   active.style.color       = 'white';
 }
 
-function updateVolDisplay(val) {
-  document.getElementById('vol-display').textContent = val + '%';
-}
 function updateRateDisplay(val) {
   document.getElementById('rate-display').textContent = (val / 100).toFixed(1) + '×';
-}
-function resetVolume() {
-  document.getElementById('opt-tts-volume').value = 100;
-  updateVolDisplay(100);
-  saveOptsSettings();
 }
 function resetRate() {
   document.getElementById('opt-tts-rate').value = 100;
