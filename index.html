@@ -4,8 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>日本語 단어장</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Noto+Sans+KR:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Noto+Sans+KR:wght@300;400;600&family=M+PLUS+1p:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js"></script>
 <style>
   :root {
     --ink: #1a2e2b;
@@ -21,6 +22,7 @@
     --mint-pale: #e8f5ee;
     --border: #aecfbe;
     --shadow: rgba(58,125,95,0.10);
+    --word-font: 'Noto Serif JP', serif;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -158,62 +160,67 @@
     background: var(--mint-deep);
   }
   .card .kanji {
-    font-family: 'Noto Serif JP', serif;
+    font-family: var(--word-font);
     font-size: clamp(2.5rem, 8vw, 4.5rem);
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.8;
     color: var(--ink);
-    margin-bottom: 4px;
   }
-  .card .furigana {
-    font-family: 'Noto Serif JP', serif;
-    font-size: clamp(1.2rem, 3.2vw, 1.6rem);
+  /* ruby 후리가나 스타일 (단어 카드) */
+  .card .kanji ruby { ruby-align: center; }
+  .card .kanji rt {
+    font-size: 0.28em;
     font-weight: 700;
     color: var(--mint);
     opacity: 0;
     transition: opacity 0.4s ease;
-    margin-bottom: 2px;
-    min-height: 1.4em;
+    font-family: var(--word-font);
   }
-  .card .furigana.show { opacity: 1; }
+  .card .kanji rt.show { opacity: 1; }
+  /* 기존 furigana div는 숨김 (하위 호환) */
+  .card .furigana {
+    display: none;
+  }
   .card .meaning {
     font-size: clamp(0.9rem, 2.5vw, 1.15rem);
+    font-weight: 600;
     color: #444;
     opacity: 0;
     transition: opacity 0.4s ease 0.1s;
-    padding: 16px 16px 8px;
+    padding: 19px 16px 10px;
     margin-top: 10px;
     border-top: 1px dashed var(--border);
     width: 100%;
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: center;
     gap: 8px;
   }
   .card .meaning.show { opacity: 1; }
   .meaning-type-badge {
-    font-size: 0.72rem;
-    background: var(--paper2);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 2px 7px;
-    color: #777;
-    font-weight: 600;
+    font-size: 0.82rem;
+    background: var(--mint-deep);
+    border: none;
+    border-radius: 20px;
+    padding: 4px 12px;
+    color: #fff;
+    font-weight: 700;
     white-space: nowrap;
     flex-shrink: 0;
+    letter-spacing: 0.04em;
   }
   .card .type-badge {
     position: absolute;
     top: 14px;
     right: 16px;
-    font-size: 0.65rem;
-    background: var(--paper2);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 2px 8px;
-    color: #777;
-    font-weight: 600;
-    letter-spacing: 0.05em;
+    font-size: 0.82rem;
+    background: var(--mint-deep);
+    border: none;
+    border-radius: 20px;
+    padding: 4px 12px;
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: 0.04em;
   }
 
   .btn-row {
@@ -367,7 +374,7 @@
     padding: 10px 14px;
     font-size: 0.85rem;
     font-family: 'Noto Sans KR', sans-serif;
-    font-weight: 500;
+    font-weight: 400;
     cursor: pointer;
     border: none;
     background: none;
@@ -1054,7 +1061,7 @@
   .card .example-block {
     width: 100%;
     margin-top: 10px;
-    padding: 10px 14px;
+    padding: 14px 14px 12px;
     border-top: 1px dashed var(--border);
     text-align: center;
     display: flex;
@@ -1073,19 +1080,45 @@
     margin-bottom: 2px;
   }
   .example-jp {
-    font-family: 'Noto Serif JP', serif;
-    font-size: clamp(0.82rem, 2.2vw, 1rem);
+    font-family: 'M PLUS 1p', sans-serif;
+    font-size: clamp(1.15rem, 3.2vw, 1.45rem);
+    font-weight: 400;
     color: var(--ink);
-    line-height: 1.6;
+    line-height: 2.4;
+    -webkit-font-smoothing: antialiased;
   }
   .example-kr {
-    font-size: clamp(0.75rem, 2vw, 0.88rem);
+    font-size: clamp(0.88rem, 2.2vw, 1rem);
     color: #777;
     line-height: 1.5;
     opacity: 0;
     transition: opacity 0.4s ease 0.15s;
   }
   .example-kr.show { opacity: 1; }
+  /* ── Ruby (후리가나) ── */
+  .example-jp ruby {
+    ruby-align: center;
+  }
+  .example-jp rt {
+    font-size: 0.58em;
+    font-weight: 400;
+    color: var(--mint);
+    letter-spacing: -0.05em;
+    font-family: 'M PLUS 1p', sans-serif;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .example-jp rt.show { opacity: 1; }
+  .furi-loading {
+    display: inline-block;
+    font-size: 0.72rem;
+    color: var(--mint);
+    opacity: 0.7;
+    animation: furi-blink 0.9s infinite alternate;
+    margin-left: 6px;
+  }
+  @keyframes furi-blink { from { opacity: 0.3; } to { opacity: 0.9; } }
+
 
   /* Edit mode: example textarea row */
   .example-edit-wrap {
@@ -1249,6 +1282,18 @@
       <!-- Quiz Panel -->
       <div class="opts-panel" id="opts-panel-quiz">
         <div class="opts-section-title">퀴즈 설정</div>
+        <div class="opts-row">
+          <div>
+            <div class="opts-row-label">🔤 단어 폰트</div>
+            <div class="opts-row-sub">퀴즈 카드의 단어·후리가나에 적용할 글꼴을 선택합니다.</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button id="font-opt-serif" onclick="setWordFont('serif')"
+              style="padding:6px 13px;border-radius:6px;border:1.5px solid var(--border);background:white;cursor:pointer;font-family:'Noto Serif JP',serif;font-size:0.9rem;font-weight:700;color:var(--ink);transition:all 0.15s">明朝</button>
+            <button id="font-opt-sans" onclick="setWordFont('sans')"
+              style="padding:6px 13px;border-radius:6px;border:1.5px solid var(--border);background:white;cursor:pointer;font-family:'M PLUS 1p',sans-serif;font-size:0.9rem;font-weight:700;color:var(--ink);transition:all 0.15s">ゴシック</button>
+          </div>
+        </div>
         <div class="opts-row">
           <div>
             <div class="opts-row-label">🔀 셔플</div>
@@ -1909,13 +1954,11 @@ function renderQuiz() {
       <div class="card" id="quiz-card" onclick="onCardClick()" style="cursor:pointer">
         ${typeBadge}
         ${carryIndicator}
-        <div class="furigana" id="furi">${w.furigana}</div>
-        <div class="kanji">${w.kanji}</div>
+        <div class="kanji" id="quiz-kanji-el">${buildWordRubyHtml(w.kanji, w.furigana, false)}</div>
         <div class="meaning" id="mean">${w.type ? `<span class="meaning-type-badge">${esc(w.type)}</span>` : ''}<span>${esc(w.meaning)}</span></div>
         ${(optsSettings.showExample && w.exampleJp) ? `
         <div class="example-block" id="example-block" data-exjp="${esc(w.exampleJp)}" onclick="event.stopPropagation(); speakExampleBlock(this)" style="cursor:pointer" title="예문 발음 듣기">
-          <div class="example-label">예문 🔊</div>
-          <div class="example-jp">${esc(w.exampleJp)}</div>
+          <div class="example-jp" id="example-jp-text">${esc(w.exampleJp)}</div>
           ${w.exampleKr ? `<div class="example-kr" id="example-kr">${esc(w.exampleKr)}</div>` : ''}
         </div>` : ''}
       </div>
@@ -1928,14 +1971,183 @@ function renderQuiz() {
   _ttsExampleText = (optsSettings.showExample && w.exampleJp) ? w.exampleJp : '';
 }
 
+
+// ── 단어 카드용 ruby HTML 생성 ──
+// kanji: 단어 문자열, furigana: 전체 읽기, show: rt 표시 여부
+function buildWordRubyHtml(kanji, furigana, show) {
+  if (!kanji) return '';
+  const showCls = show ? ' class="show"' : '';
+  if (!furigana || !_hasKanji(kanji)) {
+    // 한자 없으면 그냥 텍스트
+    return kanji;
+  }
+
+  // 한자+히라가나 혼합 분해: 한자 부분에만 후리가나, 히라가나는 그대로
+  // 예) 食べる / たべる → <ruby>食<rt>た</rt></ruby>べる
+  const kanjiOnly = kanji.replace(/[^一-鿿㐀-䶿々〆]/g, '');
+  // 단순 케이스: 단어 전체가 한자만이면 furigana 전체를 rt에
+  if (!/[぀-ゟ゠-ヿぁ-ん]/.test(kanji)) {
+    return `<ruby>${kanji}<rt${showCls}>${furigana}</rt></ruby>`;
+  }
+
+  // 한자+히라가나 혼합: suffix 분리
+  const suffixMatch = kanji.match(/^([一-鿿㐀-䶿々〆]+)([぀-ゟ゠-ヿぁ-ん]+)$/);
+  if (suffixMatch) {
+    const kanjiPart  = suffixMatch[1];
+    const suffixPart = suffixMatch[2];
+    if (furigana.endsWith(suffixPart)) {
+      const kanjiReading = furigana.slice(0, furigana.length - suffixPart.length);
+      return `<ruby>${kanjiPart}<rt${showCls}>${kanjiReading}</rt></ruby>${suffixPart}`;
+    }
+  }
+
+  // 그 외: 전체에 furigana
+  return `<ruby>${kanji}<rt${showCls}>${furigana}</rt></ruby>`;
+}
+
+// ── 후리가나 자동 생성 (kuromoji.js) ──
+const _furiCache = {};
+let _kuromojiTokenizer = null;
+let _kuromojiReady = false;
+let _kuromojiLoading = false;
+let _kuromojiQueue = [];
+
+function _initKuromoji() {
+  if (_kuromojiReady || _kuromojiLoading) return;
+  _kuromojiLoading = true;
+  kuromoji.builder({ dicPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict' }).build((err, tokenizer) => {
+    if (err) { console.error('kuromoji 초기화 실패', err); return; }
+    _kuromojiTokenizer = tokenizer;
+    _kuromojiReady = true;
+    _kuromojiLoading = false;
+    _kuromojiQueue.forEach(fn => fn());
+    _kuromojiQueue = [];
+  });
+}
+
+function _katakanaToHiragana(str) {
+  return str.replace(/[\u30A1-\u30F6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+}
+
+function _hasKanji(str) {
+  return /[\u4e00-\u9fff\u3400-\u4dbf]/.test(str);
+}
+
+function _buildRubyHtml(tokens) {
+  return tokens.map(t => {
+    const surface = t.surface_form;
+    if (!_hasKanji(surface)) return surface;
+    const reading = t.reading ? _katakanaToHiragana(t.reading) : null;
+    if (!reading || reading === surface) return surface;
+
+    // 토큰 끝의 히라가나 접미부 분리
+    // 예) surface="捨てる" reading="すてる" → kanji="捨" suffix="てる" kReading="す"
+    const suffixMatch = surface.match(/^([一-鿿㐀-䶿々〆]+)([぀-ゟ゠-ヿ]*)$/);
+    if (suffixMatch) {
+      const kanjiPart  = suffixMatch[1];
+      const suffixPart = suffixMatch[2]; // 히라가나 접미부 (없을 수도 있음)
+      if (suffixPart && reading.endsWith(suffixPart)) {
+        const kanjiReading = reading.slice(0, reading.length - suffixPart.length);
+        return `<ruby>${kanjiPart}<rt>${kanjiReading}</rt></ruby>${suffixPart}`;
+      }
+    }
+
+    return `<ruby>${surface}<rt>${reading}</rt></ruby>`;
+  }).join('');
+}
+
+function addFuriganaToWordCard(kanji) {
+  const el = document.getElementById('quiz-kanji-el');
+  if (!el) return;
+  if (!_hasKanji(kanji)) return;
+
+  const cacheKey = '__word__' + kanji;
+  const apply = () => {
+    const currentEl = document.getElementById('quiz-kanji-el');
+    if (!currentEl) return;
+    try {
+      const tokens = _kuromojiTokenizer.tokenize(kanji);
+      const html = _buildRubyHtml(tokens);
+      // rt에 show 클래스 없이 생성된 html을 주입, reveal 시 show 추가
+      _furiCache[cacheKey] = html;
+      currentEl.innerHTML = html;
+      // reveal 이후 호출되므로 바로 show
+      currentEl.querySelectorAll('rt').forEach(rt => rt.classList.add('show'));
+    } catch(e) {}
+  };
+
+  if (_kuromojiReady) {
+    apply();
+  } else {
+    _kuromojiQueue.push(apply);
+    _initKuromoji();
+  }
+}
+
+function addFuriganaToExample(exampleJp) {
+  const el = document.getElementById('example-jp-text');
+  if (!el) return;
+  if (!_hasKanji(exampleJp)) return;
+
+  if (_furiCache[exampleJp]) {
+    el.innerHTML = _furiCache[exampleJp];
+    el.querySelectorAll('rt').forEach(rt => rt.classList.add('show'));
+    return;
+  }
+
+  // 로딩 표시
+  const loading = document.createElement('span');
+  loading.className = 'furi-loading';
+  loading.textContent = '読み仮名…';
+  el.appendChild(loading);
+
+  const apply = () => {
+    const currentEl = document.getElementById('example-jp-text');
+    if (!currentEl) return;
+    try {
+      const tokens = _kuromojiTokenizer.tokenize(exampleJp);
+      const html = _buildRubyHtml(tokens);
+      _furiCache[exampleJp] = html;
+      currentEl.innerHTML = html;
+      currentEl.querySelectorAll('rt').forEach(rt => rt.classList.add('show'));
+    } catch(e) {
+      const sp = currentEl.querySelector('.furi-loading');
+      if (sp) sp.remove();
+    }
+  };
+
+  if (_kuromojiReady) {
+    apply();
+  } else {
+    _kuromojiQueue.push(apply);
+    _initKuromoji();
+  }
+}
+
+// 페이지 로드 시 미리 초기화
+_initKuromoji();
+
 function reveal() {
-  document.getElementById('furi').classList.add('show');
+  const w = quizQueue[currentIdx];
+  // 단어 ruby 후리가나 표시
+  const kanjiEl = document.getElementById('quiz-kanji-el');
+  if (kanjiEl) {
+    if (w && !w.furigana && _hasKanji(w.kanji)) {
+      // furigana 없을 때 kuromoji 자동 생성
+      addFuriganaToWordCard(w.kanji);
+    } else {
+      kanjiEl.querySelectorAll('rt').forEach(rt => rt.classList.add('show'));
+    }
+  }
   document.getElementById('mean').classList.add('show');
   revealed = true;
 
   // 예문 한국어 번역 공개
   const exKr = document.getElementById('example-kr');
   if (exKr) exKr.classList.add('show');
+
+  // 예문 후리가나 자동 생성
+  if (_ttsExampleText) addFuriganaToExample(_ttsExampleText);
 
   document.getElementById('btn-row').innerHTML = `
     <button class="btn btn-carry" onclick="markCarry()">↩ 이월${kbBadge(keyBindings.carry)}</button>
@@ -2243,6 +2455,36 @@ async function saveRow(id) {
   const exampleKr = (document.getElementById('e-exkr-' + id)?.value || '').trim();
   if (!kanji) { showToast('단어를 입력해 주세요'); return; }
 
+  // 신규 단어일 때만 중복 체크
+  if (w._new) {
+    const dup = words.find(x => x.id !== id && x.kanji === kanji && x.furigana === furigana && x.meaning === meaning);
+    if (dup) {
+      // 예문만 다른 경우 → 기존 단어에 예문 덮어쓰기
+      if (exampleJp || exampleKr) {
+        dup.exampleJp = exampleJp; dup.exampleKr = exampleKr;
+        // 현재 신규 빈 행 제거
+        words = words.filter(x => x.id !== id);
+        save();
+        renderEditTable();
+        showSyncStatus('saving');
+        try {
+          await sbFetch(`vocab_words?id=eq.${dup.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ example_jp: exampleJp, example_kr: exampleKr })
+          });
+          showSyncStatus('ok');
+          showToast('📝 기존 단어에 예문을 덮어씌웠습니다');
+        } catch(e) {
+          showSyncStatus('error', e.message);
+          showToast('저장 실패 (오프라인 모드)');
+        }
+      } else {
+        showToast('⚠️ 이미 동일한 단어가 있습니다');
+      }
+      return;
+    }
+  }
+
   // 낙관적 UI 업데이트
   w.kanji = kanji; w.furigana = furigana; w.meaning = meaning; w.type = type;
   w.exampleJp = exampleJp; w.exampleKr = exampleKr;
@@ -2424,12 +2666,12 @@ function speakWordThenExample() {
   let googleDone = false;
 
   const afterWord = () => {
-    // 0.8초 쉬고 예문 재생
+    // 0.1초 쉬고 예문 재생
     if (_ttsExampleText) {
       _ttsChainTimer = setTimeout(() => {
         _ttsChainTimer = null;
         speakWord(document.createElement('button'), _ttsExampleText);
-      }, 800);
+      }, 100);
     }
   };
 
@@ -2659,11 +2901,41 @@ function importExcel(event) {
         carrySet.clear(); doneSet.clear(); carryHistory.clear(); carryCount = {};
       }
 
-      const inserted = await sbFetch('vocab_words', {
-        method: 'POST',
-        prefer: 'return=representation',
-        body: JSON.stringify(newWords)
-      });
+      // 추가 모드: 완전 중복 제외 / 단어 같고 예문만 다른 경우 예문 업데이트
+      let exampleUpdated = 0;
+      let wordsToInsert = newWords;
+      if (!replace) {
+        const toUpdate = [];
+        wordsToInsert = newWords.filter(n => {
+          const dup = words.find(w => w.kanji === n.kanji && w.furigana === n.furigana && w.meaning === n.meaning);
+          if (!dup) return true; // 신규 → 삽입
+          // 예문이 새로 들어왔고 기존과 다르면 업데이트 대상
+          if ((n.example_jp || n.example_kr) &&
+              (dup.exampleJp !== n.example_jp || dup.exampleKr !== n.example_kr)) {
+            toUpdate.push({ dup, n });
+          }
+          return false; // 중복 → 삽입 안 함
+        });
+        // 예문 덮어쓰기
+        for (const { dup, n } of toUpdate) {
+          dup.exampleJp = n.example_jp; dup.exampleKr = n.example_kr;
+          await sbFetch(`vocab_words?id=eq.${dup.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ example_jp: n.example_jp, example_kr: n.example_kr })
+          });
+          exampleUpdated++;
+        }
+      }
+      const skipped = newWords.length - wordsToInsert.length - exampleUpdated;
+
+      let inserted = [];
+      if (wordsToInsert.length > 0) {
+        inserted = await sbFetch('vocab_words', {
+          method: 'POST',
+          prefer: 'return=representation',
+          body: JSON.stringify(wordsToInsert)
+        });
+      }
 
       if (replace) {
         words = inserted.map(r => ({ id:r.id, kanji:r.kanji, furigana:r.furigana, meaning:r.meaning, type:r.type||'명사', exampleJp:r.example_jp||'', exampleKr:r.example_kr||'' }));
@@ -2675,7 +2947,17 @@ function importExcel(event) {
       renderEditTable();
       buildQueue();
       showSyncStatus('ok');
-      showToast(`${inserted.length}개 단어를 ${replace ? '교체' : '추가'}했습니다`);
+      const parts = [];
+      if (inserted.length > 0) parts.push(`${inserted.length}개 추가`);
+      if (exampleUpdated > 0) parts.push(`예문 ${exampleUpdated}개 업데이트`);
+      if (skipped > 0) parts.push(`중복 ${skipped}개 제외`);
+      if (replace) {
+        showToast(`${inserted.length}개 단어를 교체했습니다`);
+      } else if (parts.length === 0) {
+        showToast('추가할 항목이 없습니다');
+      } else {
+        showToast(parts.join(' · '));
+      }
     } catch(err) {
       showSyncStatus('error', err.message);
       showToast('가져오기 실패: ' + err.message);
@@ -2846,6 +3128,7 @@ let optsSettings = {
   ttsVolume:     100,     // 0~100, step 5
   ttsRate:       90,      // 50~150, step 10 (실제값 /100)
   showExample:   true,    // 퀴즈에서 예문 표시
+  wordFont:      'serif', // 단어 카드 폰트: 'serif' | 'sans'
 };
 
 function loadOptsSettings() {
@@ -2862,6 +3145,7 @@ function saveOptsSettings() {
   optsSettings.ttsRate       = parseInt(document.getElementById('opt-tts-rate').value);
   optsSettings.showExample   = document.getElementById('opt-show-example')?.checked ?? true;
   localStorage.setItem(OPTS_KEY, JSON.stringify(optsSettings));
+  applyWordFont();
   // 버튼 표시 여부 즉시 반영
   renderQuiz();
 }
@@ -2877,6 +3161,37 @@ function syncOptsUI() {
   if (cb) cb.checked = shuffleMode;
   const se = document.getElementById('opt-show-example');
   if (se) se.checked = optsSettings.showExample ?? true;
+  syncWordFontButtons();
+}
+
+function setWordFont(font) {
+  optsSettings.wordFont = font;
+  localStorage.setItem(OPTS_KEY, JSON.stringify(optsSettings));
+  applyWordFont();
+  syncWordFontButtons();
+}
+
+function applyWordFont() {
+  const isSans = optsSettings.wordFont === 'sans';
+  const family = isSans ? "'M PLUS 1p', sans-serif" : "'Noto Serif JP', serif";
+  document.documentElement.style.setProperty('--word-font', family);
+}
+
+function syncWordFontButtons() {
+  const serif = document.getElementById('font-opt-serif');
+  const sans  = document.getElementById('font-opt-sans');
+  if (!serif || !sans) return;
+  const isSans = optsSettings.wordFont === 'sans';
+  [serif, sans].forEach(btn => {
+    btn.style.background   = 'white';
+    btn.style.borderColor  = 'var(--border)';
+    btn.style.color        = 'var(--ink)';
+    btn.style.boxShadow    = '';
+  });
+  const active = isSans ? sans : serif;
+  active.style.background  = 'var(--mint-deep)';
+  active.style.borderColor = 'var(--mint-deep)';
+  active.style.color       = 'white';
 }
 
 function updateVolDisplay(val) {
@@ -3148,6 +3463,7 @@ document.addEventListener('click', function(e) {
   loadFontSize();
   await load();
   loadOptsSettings();
+  applyWordFont();
   loadKbBindings();
   loadShuffleMode();
   loadPageSize();
