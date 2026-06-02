@@ -6,7 +6,6 @@
 <title>日本語 단어장</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Noto+Sans+KR:wght@300;400;600&family=M+PLUS+1p:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://unpkg.com/kuromoji@0.1.2/build/kuromoji.js"></script>
 <style>
   :root {
     --ink: #1a2e2b;
@@ -2053,12 +2052,20 @@ function _hasKanji(str) {
 function _initKuroshiro() {
   if (_initPromise) return _initPromise;
   _initPromise = new Promise((resolve) => {
-    kuromoji.builder({ dicPath: 'https://unpkg.com/kuromoji@0.1.2/dict' })
-      .build((err, tokenizer) => {
-        if (!err) _tokenizer = tokenizer;
-        else console.error('kuromoji init error', err);
-        resolve();
-      });
+    function build() {
+      kuromoji.builder({ dicPath: 'https://unpkg.com/kuromoji@0.1.2/dict' })
+        .build((err, tokenizer) => {
+          if (!err) _tokenizer = tokenizer;
+          else console.error('kuromoji init error', err);
+          resolve();
+        });
+    }
+    // kuromoji 스크립트가 아직 안 로딩됐으면 로드 완료 후 실행
+    if (typeof kuromoji !== 'undefined') {
+      build();
+    } else {
+      window._kuromojiOnLoad = build;
+    }
   });
   return _initPromise;
 }
@@ -2109,8 +2116,7 @@ async function addFuriganaToExample(exampleJp) {
   el.querySelectorAll('rt').forEach(rt => rt.classList.add('show'));
 }
 
-// 페이지 로드 시 사전 선행 다운로드
-_initKuroshiro();
+// 후리가나는 실제 필요할 때 lazy 초기화
 
 function reveal() {
   const w = quizQueue[currentIdx];
@@ -3461,5 +3467,6 @@ document.addEventListener('click', function(e) {
   syncFromSupabase();    // 백그라운드 동기화 (await 없음)
 })();
 </script>
+<script src="https://unpkg.com/kuromoji@0.1.2/build/kuromoji.js" async onload="window._kuromojiLoaded=true;if(window._kuromojiOnLoad)window._kuromojiOnLoad()"></script>
 </body>
 </html>
