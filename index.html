@@ -1537,7 +1537,7 @@ const SUPABASE_KEY  = 'sb_publishable_sTcJZ0tMIAaFJXeabxMR5Q_bqx1VKUJ';
 // ── Supabase REST 헬퍼 ──
 async function sbFetch(path, options = {}) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8000);
+  const timer = setTimeout(() => controller.abort(), 5000);
   try {
     const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
       ...options,
@@ -1743,13 +1743,31 @@ function save() {
   saveProgress();
 }
 
-// ── load() : Supabase에서 단어 불러오기 ──
-async function load() {
+// ── loadLocal() : localStorage / 기본값으로 즉시 로드 ──
+function loadLocal() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
+    try {
+      const d = JSON.parse(raw);
+      if (d.words && d.words.length > 0) {
+        words = d.words;
+        nextId = words.reduce((m,w) => Math.max(m, w.id), 0) + 1;
+        loadProgress();
+        return;
+      }
+    } catch(e) {}
+  }
+  words = JSON.parse(JSON.stringify(DEFAULT_WORDS));
+  nextId = words.reduce((m,w) => Math.max(m, w.id), 0) + 1;
+  loadProgress();
+}
+
+// ── syncFromSupabase() : 백그라운드에서 Supabase 동기화 ──
+async function syncFromSupabase() {
   showSyncStatus('loading');
   try {
     let rows = await sbFetch('vocab_words?order=id.asc');
     if (!rows || rows.length === 0) {
-      // 처음 실행 — 기본 데이터 삽입
       rows = await sbFetch('vocab_words', {
         method: 'POST',
         prefer: 'return=representation',
@@ -1769,19 +1787,19 @@ async function load() {
     nextId = words.reduce((m,w) => Math.max(m, w.id), 0) + 1;
     loadProgress();
     showSyncStatus('ok');
+    // 동기화된 데이터로 화면 갱신
+    buildQueue();
+    renderQuiz();
+    renderEditTable();
   } catch(e) {
     showSyncStatus('error', e.message);
-    // 오프라인 폴백 — localStorage 사용
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const d = JSON.parse(raw);
-      words = d.words || DEFAULT_WORDS;
-    } else {
-      words = JSON.parse(JSON.stringify(DEFAULT_WORDS));
-    }
-    loadProgress();
-    nextId = words.reduce((m,w) => Math.max(m, w.id), 0) + 1;
   }
+}
+
+// ── load() : 즉시 로컬 로드 후 백그라운드 Supabase 동기화 ──
+async function load() {
+  loadLocal();
+  syncFromSupabase(); // await 없이 백그라운드 실행 — 절대 블로킹하지 않음
 }
 
 // ── 동기 상태 표시 ──
