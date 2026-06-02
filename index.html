@@ -1338,6 +1338,17 @@
             </div>
           </div>
         </div>
+
+        <div class="opts-row">
+          <div style="width:100%">
+            <div class="opts-row-label">🎙 목소리 선택</div>
+            <div class="opts-row-sub" style="margin-bottom:8px">사용할 일본어 음성을 선택합니다. 🖥 로컬 / 🌐 온라인</div>
+            <select id="opt-tts-voice" onchange="saveOptsSettings()"
+              style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:6px;font-family:'Noto Sans KR',sans-serif;font-size:0.88rem;background:white;color:var(--ink);outline:none;cursor:pointer">
+              <option value="">🔁 자동 (시스템 기본)</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <!-- Quiz Panel -->
@@ -2658,9 +2669,47 @@ function _ttsStop() {
 // ── TTS: Web Speech API만 사용 ──
 let _wsVoices = [];
 if (window.speechSynthesis) {
-  const _syncVoices = () => { _wsVoices = speechSynthesis.getVoices(); };
-  _syncVoices();
+  const _syncVoices = () => { _wsVoices = speechSynthesis.getVoices(); populateVoiceSelect(); };
+  _wsVoices = speechSynthesis.getVoices(); // 초기 로드 (DOM 준비 전이므로 populateVoiceSelect 미호출)
   speechSynthesis.onvoiceschanged = _syncVoices;
+}
+
+// 선택된 목소리 반환 (없으면 일본어 자동 선택)
+function _getSelectedVoice() {
+  const saved = optsSettings.ttsVoice;
+  if (saved) {
+    const found = _wsVoices.find(v => v.name === saved);
+    if (found) return found;
+  }
+  return _wsVoices.find(v => v.lang === 'ja-JP') || _wsVoices.find(v => v.lang.startsWith('ja')) || null;
+}
+
+// 목소리 드롭다운 옵션 채우기
+function populateVoiceSelect() {
+  const sel = document.getElementById('opt-tts-voice');
+  if (!sel) return;
+  const current = sel.value || optsSettings.ttsVoice || '';
+  sel.innerHTML = '';
+  const auto = document.createElement('option');
+  auto.value = '';
+  auto.textContent = '🔁 자동 (시스템 기본)';
+  sel.appendChild(auto);
+  const jaVoices = _wsVoices.filter(v => v.lang === 'ja-JP' || v.lang.startsWith('ja'));
+  if (jaVoices.length === 0) {
+    const none = document.createElement('option');
+    none.value = '';
+    none.textContent = '— 일본어 음성 없음 —';
+    none.disabled = true;
+    sel.appendChild(none);
+  } else {
+    jaVoices.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.name;
+      opt.textContent = v.name + (v.localService ? ' 🖥' : ' 🌐');
+      sel.appendChild(opt);
+    });
+  }
+  if (current) sel.value = current;
 }
 
 function speakWord(btn, text) {
@@ -2679,7 +2728,7 @@ function speakWord(btn, text) {
   utter.pitch = 1;
   utter.volume = (optsSettings.ttsVolume ?? 50) / 100;
 
-  const jaVoice = _wsVoices.find(v => v.lang === 'ja-JP') || _wsVoices.find(v => v.lang.startsWith('ja'));
+  const jaVoice = _getSelectedVoice();
   if (jaVoice) utter.voice = jaVoice;
 
   utter.onend = () => _ttsReset();
@@ -2704,7 +2753,7 @@ function speakWordThenExample() {
   _ttsStop();
   speechSynthesis.cancel();
 
-  const jaVoice = _wsVoices.find(v => v.lang === 'ja-JP') || _wsVoices.find(v => v.lang.startsWith('ja'));
+  const jaVoice = _getSelectedVoice();
 
   const utter1 = new SpeechSynthesisUtterance(_ttsText);
   utter1.lang = 'ja-JP';
@@ -3154,6 +3203,7 @@ let optsSettings = {
   ttsAutoReveal: false,   // 정답 공개 시 자동 발음
   ttsRate:       90,      // 50~150, step 10 (실제값 /100)
   ttsVolume:     100,     // 0~100 (실제값 /100)
+  ttsVoice:      '',      // 선택된 목소리 이름 ('' = 자동)
   showExample:   true,    // 퀴즈에서 예문 표시
   wordFont:      'serif', // 단어 카드 폰트: 'serif' | 'sans'
   milestone:     50,      // 완료 마일스톤 (0=비활성화)
@@ -3171,6 +3221,8 @@ function saveOptsSettings() {
   optsSettings.ttsAutoReveal = document.getElementById('opt-tts-autoreveal').checked;
   optsSettings.ttsRate       = parseInt(document.getElementById('opt-tts-rate').value);
   optsSettings.ttsVolume     = parseInt(document.getElementById('opt-tts-volume').value);
+  const voiceEl = document.getElementById('opt-tts-voice');
+  if (voiceEl) optsSettings.ttsVoice = voiceEl.value;
   optsSettings.showExample   = document.getElementById('opt-show-example')?.checked ?? true;
   optsSettings.milestone     = parseInt(document.getElementById('opt-milestone')?.value) || 0;
   localStorage.setItem(OPTS_KEY, JSON.stringify(optsSettings));
@@ -3186,6 +3238,9 @@ function syncOptsUI() {
   updateRateDisplay(optsSettings.ttsRate);
   const volEl = document.getElementById('opt-tts-volume');
   if (volEl) { volEl.value = optsSettings.ttsVolume ?? 50; updateVolumeDisplay(optsSettings.ttsVolume ?? 50); }
+  populateVoiceSelect();
+  const voiceEl = document.getElementById('opt-tts-voice');
+  if (voiceEl && optsSettings.ttsVoice) voiceEl.value = optsSettings.ttsVoice;
   const cb = document.getElementById('opt-shuffle');
   if (cb) cb.checked = shuffleMode;
   const se = document.getElementById('opt-show-example');
@@ -3501,8 +3556,11 @@ document.addEventListener('click', function(e) {
   loadSortAndFilter();
   buildQueue();
 
-  // 폰트 로딩 완료까지 대기 — UI 렌더 전에 기다려야 FOUT 없음
-  await document.fonts.ready;
+  // 폰트 로딩 완료까지 대기 (최대 5초 타임아웃 — 로컬/오프라인 환경 대비)
+  await Promise.race([
+    document.fonts.ready,
+    new Promise(r => setTimeout(r, 5000))
+  ]);
   // 렌더링 프레임 1회 대기 (레이아웃 안정화)
   await new Promise(r => requestAnimationFrame(r));
 
