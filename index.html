@@ -2060,11 +2060,15 @@ function _initKuroshiro() {
           resolve();
         });
     }
-    // kuromoji 스크립트가 아직 안 로딩됐으면 로드 완료 후 실행
     if (typeof kuromoji !== 'undefined') {
       build();
     } else {
-      window._kuromojiOnLoad = build;
+      // 동적 스크립트 삽입으로 로드
+      const s = document.createElement('script');
+      s.src = 'https://unpkg.com/kuromoji@0.1.2/build/kuromoji.js';
+      s.onload = build;
+      s.onerror = () => { console.error('kuromoji 로드 실패'); resolve(); };
+      document.body.appendChild(s);
     }
   });
   return _initPromise;
@@ -3467,6 +3471,6 @@ document.addEventListener('click', function(e) {
   syncFromSupabase();    // 백그라운드 동기화 (await 없음)
 })();
 </script>
-<script src="https://unpkg.com/kuromoji@0.1.2/build/kuromoji.js" async onload="window._kuromojiLoaded=true;if(window._kuromojiOnLoad)window._kuromojiOnLoad()"></script>
+
 </body>
 </html>
