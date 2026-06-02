@@ -1304,6 +1304,22 @@
 
         <div class="opts-row">
           <div>
+            <div class="opts-row-label">볼륨</div>
+            <div class="opts-row-sub" style="margin-bottom:10px">발음 재생 볼륨을 조절합니다</div>
+            <div class="vol-row">
+              <span style="font-size:0.8rem;color:#999">🔇</span>
+              <input type="range" class="vol-slider" id="opt-tts-volume"
+                min="0" max="100" step="10" value="100"
+                oninput="updateVolumeDisplay(this.value)" onchange="saveOptsSettings()">
+              <span class="vol-val" id="volume-display">100%</span>
+              <span style="font-size:0.8rem;color:#999">🔊</span>
+              <button class="reset-val-btn" onclick="resetVolume()" title="100%로 초기화">↺</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="opts-row">
+          <div>
             <div class="opts-row-label">재생 속도</div>
             <div class="opts-row-sub" style="margin-bottom:10px">발음 재생 빠르기를 조절합니다</div>
             <div class="vol-row">
@@ -1827,7 +1843,8 @@ async function syncFromSupabase() {
     loadProgress();
     showSyncStatus('ok');
     // 동기화된 데이터로 화면 갱신
-    buildQueue();
+    // 이미 퀴즈가 진행 중이면 큐를 재빌드하지 않음 (첫 단어가 바뀌는 현상 방지)
+    if (quizQueue.length === 0) buildQueue();
     renderQuiz();
     renderEditTable();
   } catch(e) {
@@ -2540,6 +2557,7 @@ function speakWord(btn, text) {
   utter.lang = 'ja-JP';
   utter.rate = (optsSettings.ttsRate ?? 85) / 100;
   utter.pitch = 1;
+  utter.volume = (optsSettings.ttsVolume ?? 100) / 100;
 
   const jaVoice = _wsVoices.find(v => v.lang === 'ja-JP') || _wsVoices.find(v => v.lang.startsWith('ja'));
   if (jaVoice) utter.voice = jaVoice;
@@ -2571,6 +2589,7 @@ function speakWordThenExample() {
   const utter1 = new SpeechSynthesisUtterance(_ttsText);
   utter1.lang = 'ja-JP';
   utter1.rate = (optsSettings.ttsRate ?? 85) / 100;
+  utter1.volume = (optsSettings.ttsVolume ?? 100) / 100;
   if (jaVoice) utter1.voice = jaVoice;
   utter1.onend = () => {
     if (!_ttsExampleText) { _ttsReset(); return; }
@@ -2579,6 +2598,7 @@ function speakWordThenExample() {
       const utter2 = new SpeechSynthesisUtterance(_ttsExampleText);
       utter2.lang = 'ja-JP';
       utter2.rate = (optsSettings.ttsRate ?? 85) / 100;
+      utter2.volume = (optsSettings.ttsVolume ?? 100) / 100;
       if (jaVoice) utter2.voice = jaVoice;
       utter2.onend = () => _ttsReset();
       utter2.onerror = () => _ttsReset();
@@ -3013,6 +3033,7 @@ let optsSettings = {
   ttsAutoplay:   false,   // 카드 클릭 시 자동 발음
   ttsAutoReveal: false,   // 정답 공개 시 자동 발음
   ttsRate:       90,      // 50~150, step 10 (실제값 /100)
+  ttsVolume:     100,     // 0~100 (실제값 /100)
   showExample:   true,    // 퀴즈에서 예문 표시
   wordFont:      'serif', // 단어 카드 폰트: 'serif' | 'sans'
 };
@@ -3028,6 +3049,7 @@ function saveOptsSettings() {
   optsSettings.ttsAutoplay   = document.getElementById('opt-tts-autoplay').checked;
   optsSettings.ttsAutoReveal = document.getElementById('opt-tts-autoreveal').checked;
   optsSettings.ttsRate       = parseInt(document.getElementById('opt-tts-rate').value);
+  optsSettings.ttsVolume     = parseInt(document.getElementById('opt-tts-volume').value);
   optsSettings.showExample   = document.getElementById('opt-show-example')?.checked ?? true;
   localStorage.setItem(OPTS_KEY, JSON.stringify(optsSettings));
   applyWordFont();
@@ -3040,6 +3062,8 @@ function syncOptsUI() {
   document.getElementById('opt-tts-autoreveal').checked = optsSettings.ttsAutoReveal;
   document.getElementById('opt-tts-rate').value         = optsSettings.ttsRate;
   updateRateDisplay(optsSettings.ttsRate);
+  const volEl = document.getElementById('opt-tts-volume');
+  if (volEl) { volEl.value = optsSettings.ttsVolume ?? 100; updateVolumeDisplay(optsSettings.ttsVolume ?? 100); }
   const cb = document.getElementById('opt-shuffle');
   if (cb) cb.checked = shuffleMode;
   const se = document.getElementById('opt-show-example');
@@ -3083,6 +3107,14 @@ function updateRateDisplay(val) {
 function resetRate() {
   document.getElementById('opt-tts-rate').value = 100;
   updateRateDisplay(100);
+  saveOptsSettings();
+}
+function updateVolumeDisplay(val) {
+  document.getElementById('volume-display').textContent = val + '%';
+}
+function resetVolume() {
+  document.getElementById('opt-tts-volume').value = 100;
+  updateVolumeDisplay(100);
   saveOptsSettings();
 }
 
@@ -3344,10 +3376,17 @@ document.addEventListener('click', function(e) {
   loadPageSize();
   loadSortAndFilter();
   buildQueue();
+
+  // 폰트 로딩 완료까지 대기 — UI 렌더 전에 기다려야 FOUT 없음
+  await document.fonts.ready;
+  // 렌더링 프레임 1회 대기 (레이아웃 안정화)
+  await new Promise(r => requestAnimationFrame(r));
+
   renderQuiz();
   renderEditTable();
   updateKbHintBar();
-  // 로딩 오버레이 제거
+
+  // 오버레이 제거
   const overlay = document.getElementById('loading-overlay');
   if (overlay) {
     overlay.classList.add('hidden');
