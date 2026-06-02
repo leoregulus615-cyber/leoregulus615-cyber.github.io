@@ -1192,7 +1192,7 @@
 <header>
   <h1 class="header-title">日本語 단어장<span>JAPANESE VOCABULARY</span></h1>
   <div class="header-right">
-    <span id="sync-status" class="sync-status-text" style="font-size:0.72rem;opacity:0.85;white-space:nowrap">⏳ 불러오는 중…</span>
+    <span id="sync-status" class="sync-status-text" style="font-size:0.72rem;opacity:0.85;white-space:nowrap"></span>
     <div style="display:flex;align-items:center;gap:2px;background:rgba(0,0,0,0.25);border-radius:6px;padding:3px">
       <button class="kb-settings-btn font-btn" onclick="adjustFontSize(-1)" title="글자 축소">−</button>
       <button class="kb-settings-btn font-btn" id="font-size-reset-btn" onclick="adjustFontSize(0)" title="기본 크기" style="min-width:28px;justify-content:center">A</button>
@@ -1764,7 +1764,6 @@ function loadLocal() {
 
 // ── syncFromSupabase() : 백그라운드에서 Supabase 동기화 ──
 async function syncFromSupabase() {
-  showSyncStatus('loading');
   try {
     let rows = await sbFetch('vocab_words?order=id.asc');
     if (!rows || rows.length === 0) {
@@ -3436,18 +3435,24 @@ document.addEventListener('click', function(e) {
 
 // ── Async Init ──
 (async function init() {
-  loadFontSize();
-  await load();
-  loadOptsSettings();
-  applyWordFont();
-  loadKbBindings();
-  loadShuffleMode();
-  loadPageSize();
-  loadSortAndFilter();
-  buildQueue();
-  renderQuiz();
-  renderEditTable();
-  updateKbHintBar();
+  try {
+    loadFontSize();
+    await load();          // 즉시 리턴 (non-blocking)
+    loadOptsSettings();
+    applyWordFont();
+    loadKbBindings();
+    loadShuffleMode();
+    loadPageSize();
+    loadSortAndFilter();
+    buildQueue();
+    renderQuiz();
+    renderEditTable();
+    updateKbHintBar();
+  } catch(e) {
+    console.error('init 에러:', e);
+    // 에러가 나도 최소한 화면은 띄움
+    try { buildQueue(); renderQuiz(); renderEditTable(); } catch(_) {}
+  }
 })();
 </script>
 </body>
